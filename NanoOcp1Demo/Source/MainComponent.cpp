@@ -23,13 +23,13 @@ MainComponent::MainComponent()
 
     m_powerOffD40Button = std::make_unique<TextButton>("Power Off D40");
     m_powerOffD40Button->onClick = [=]() { m_nanoOcp1Client->powerOffD40(); };
-    addAndMakeVisible(m_powerOnD40Button.get());
+    addAndMakeVisible(m_powerOffD40Button.get());
 
     m_powerOnD40Button = std::make_unique<TextButton>("Power On D40");
     m_powerOnD40Button->onClick = [=]() { m_nanoOcp1Client->powerOnD40(); };
     addAndMakeVisible(m_powerOnD40Button.get());
     
-	setSize(512, 512);
+	setSize(150, 150);
 }
 
 MainComponent::~MainComponent()

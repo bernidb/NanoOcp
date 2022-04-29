@@ -44,15 +44,15 @@ public:
         std::vector<std::uint8_t> serializedData;
 
         serializedData.push_back(m_syncVal);
-        serializedData.push_back(static_cast<std::uint8_t>(m_protoVers));
         serializedData.push_back(static_cast<std::uint8_t>(m_protoVers << 8));
-        serializedData.push_back(static_cast<std::uint8_t>(m_msgSize));
-        serializedData.push_back(static_cast<std::uint8_t>(m_msgSize << 8));
-        serializedData.push_back(static_cast<std::uint8_t>(m_msgSize << 16));
+        serializedData.push_back(static_cast<std::uint8_t>(m_protoVers));
         serializedData.push_back(static_cast<std::uint8_t>(m_msgSize << 24));
+        serializedData.push_back(static_cast<std::uint8_t>(m_msgSize << 16));
+        serializedData.push_back(static_cast<std::uint8_t>(m_msgSize << 8));
+        serializedData.push_back(static_cast<std::uint8_t>(m_msgSize));
         serializedData.push_back(m_msgType);
-        serializedData.push_back(static_cast<std::uint8_t>(m_msgCnt));
         serializedData.push_back(static_cast<std::uint8_t>(m_msgCnt << 8));
+        serializedData.push_back(static_cast<std::uint8_t>(m_msgCnt));
 
         return serializedData;
     };
@@ -70,22 +70,22 @@ public:
     std::vector<std::uint8_t> GetSerializedData() {
         std::vector<std::uint8_t> serializedData;
 
-        serializedData.push_back(static_cast<std::uint8_t>(m_cmdSize));
-        serializedData.push_back(static_cast<std::uint8_t>(m_cmdSize << 8));
-        serializedData.push_back(static_cast<std::uint8_t>(m_cmdSize << 16));
         serializedData.push_back(static_cast<std::uint8_t>(m_cmdSize << 24));
-        serializedData.push_back(static_cast<std::uint8_t>(m_handle));
-        serializedData.push_back(static_cast<std::uint8_t>(m_handle << 8));
-        serializedData.push_back(static_cast<std::uint8_t>(m_handle << 16));
+        serializedData.push_back(static_cast<std::uint8_t>(m_cmdSize << 16));
+        serializedData.push_back(static_cast<std::uint8_t>(m_cmdSize << 8));
+        serializedData.push_back(static_cast<std::uint8_t>(m_cmdSize));
         serializedData.push_back(static_cast<std::uint8_t>(m_handle << 24));
-        serializedData.push_back(static_cast<std::uint8_t>(m_targetONo));
-        serializedData.push_back(static_cast<std::uint8_t>(m_targetONo << 8));
-        serializedData.push_back(static_cast<std::uint8_t>(m_targetONo << 16));
+        serializedData.push_back(static_cast<std::uint8_t>(m_handle << 16));
+        serializedData.push_back(static_cast<std::uint8_t>(m_handle << 8));
+        serializedData.push_back(static_cast<std::uint8_t>(m_handle));
         serializedData.push_back(static_cast<std::uint8_t>(m_targetONo << 24));
-        serializedData.push_back(static_cast<std::uint8_t>(m_methIdDefLev));
+        serializedData.push_back(static_cast<std::uint8_t>(m_targetONo << 16));
+        serializedData.push_back(static_cast<std::uint8_t>(m_targetONo << 8));
+        serializedData.push_back(static_cast<std::uint8_t>(m_targetONo));
         serializedData.push_back(static_cast<std::uint8_t>(m_methIdDefLev << 8));
-        serializedData.push_back(static_cast<std::uint8_t>(m_methIdMethIdx));
+        serializedData.push_back(static_cast<std::uint8_t>(m_methIdDefLev));
         serializedData.push_back(static_cast<std::uint8_t>(m_methIdMethIdx << 8));
+        serializedData.push_back(static_cast<std::uint8_t>(m_methIdMethIdx));
         serializedData.push_back(m_paramCnt);
         serializedData.insert(serializedData.end(), m_data.begin(), m_data.end());
 

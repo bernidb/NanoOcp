@@ -113,7 +113,7 @@ void NanoOcp1Client::powerOffD40() // "3b 0001 0000001c 01 0001 00000013 0000000
 	auto requestData = request.GetSerializedData();
 	auto& msgData = headerData;
 	msgData.insert(msgData.end(), requestData.begin(), requestData.end());
-	m_tcpClient->sendMsg((const char*)msgData.data(), msgData.size());
+    auto retval = m_tcpClient->sendMsg((const char*)msgData.data(), msgData.size());
 }
 
 void NanoOcp1Client::powerOnD40() // "3b 0001 0000001c 01 0001 00000013 00000002 10000100 0004 0002 01 0001"
@@ -138,7 +138,7 @@ void NanoOcp1Client::powerOnD40() // "3b 0001 0000001c 01 0001 00000013 00000002
 	auto requestData = request.GetSerializedData();
 	auto& msgData = headerData;
 	msgData.insert(msgData.end(), requestData.begin(), requestData.end());
-	m_tcpClient->sendMsg((const char*)msgData.data(), msgData.size());
+	auto retval = m_tcpClient->sendMsg((const char*)msgData.data(), msgData.size());
 }
 
 }
