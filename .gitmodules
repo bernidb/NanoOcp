@@ -1,0 +1,3 @@
+[submodule "submodules/tcp_server_client"]
+	path = submodules/tcp_server_client
+	url = https://github.com/ChristianAhrens/tcp_server_client

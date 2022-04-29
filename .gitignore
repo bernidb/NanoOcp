@@ -31,3 +31,5 @@
 *.out
 *.app
 Research/OcaRemoteTest/MyAmpRemoteTestApp.swiftpm/.swiftpm/xcode/xcuserdata
+NanoOcp1Demo/Builds
+NanoOcp1Demo/JuceLibraryCode
