@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="t0S85N" name="NanoOcpDemo" projectType="guiapp" version="0.1.0"
               companyName="Christian Ahrens" companyEmail="christianahrens@me.com"
-              companyCopyright="2022" jucerFormatVersion="1" defines="" headerPath="../../submodules/tcp_server_client/include">
+              companyCopyright="2022" jucerFormatVersion="1" defines="">
   <MAINGROUP id="wsXNhp" name="NanoOcpDemo">
     <GROUP id="{3482B756-6423-A110-A5E5-7E6AADE98E41}" name="submodules">
       <GROUP id="{E6327702-ADFE-25DB-51B3-D943A20FA2E6}" name="tcp_server_client">
