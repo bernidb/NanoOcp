@@ -10,135 +10,138 @@
 
 #include "NanoOcp1.h"
 
-#include <algorithm>
-#include <cassert>
-#include <cstring>
-#include <iostream>
-
-#include "../submodules/tcp_server_client/include/tcp_client.h"
-#include "../submodules/tcp_server_client/include/tcp_server.h"
-
 
 namespace NanoOcp1
 {
 
 
 //==============================================================================
-NanoOcp1Base::NanoOcp1Base(std::string name, std::string serviceName)
+NanoOcp1Base::NanoOcp1Base(const juce::String& address, const int port)
 {
-
+	setAddress(address);
+	setPort(port);
 }
 
 NanoOcp1Base::~NanoOcp1Base()
 {
 }
 
-//==============================================================================
-NanoOcp1Server::NanoOcp1Server(std::string name, std::string serviceName) :
-	NanoOcp1Base(name, serviceName)
+void NanoOcp1Base::setAddress(const juce::String& address)
 {
-
-	wantedIP = "127.0.0.1";
-	incomingPacketHandler = [=](const std::string& clientIP, const char* msg, size_t size) { handleIncomingPacket(clientIP, msg, size); };
-	disconnectionHandler = [=](const std::string& ip, const std::string& msg) { handleDisconnection(ip, msg); };
-
-	m_tcpServer = std::make_unique<TcpServer>();
-	m_tcpServer->subscribe(*this);
+	m_address = address;
 }
 
-NanoOcp1Server::~NanoOcp1Server()
+const juce::String& NanoOcp1Base::getAddress()
 {
-	m_tcpServer->close();
+	return m_address;
 }
 
-void NanoOcp1Server::handleIncomingPacket(const std::string& clientIP, const char* msg, size_t size)
+void NanoOcp1Base::setPort(const int port)
 {
-
+	m_port = port;
 }
 
-void NanoOcp1Server::handleDisconnection(const std::string& ip, const std::string& msg)
+const int NanoOcp1Base::getPort()
 {
-
+	return m_port;
 }
 
 //==============================================================================
-NanoOcp1Client::NanoOcp1Client(std::string name, std::string serviceName) :
-	NanoOcp1Base(name, serviceName)
+NanoOcp1Client::NanoOcp1Client() :
+	NanoOcp1Client(juce::String(), 0)
 {
+}
 
-	wantedIP = "127.0.0.1";
-	incomingPacketHandler = [=](const char* msg, size_t size) { handleIncomingPacket(msg, size); };
-	disconnectionHandler = [=](const pipe_ret_t& ret) { handleDisconnection(ret); };
-
-	m_tcpClient = std::make_unique<TcpClient>();
-	m_tcpClient->subscribe(*this);
-	
-	m_tcpClient->connectTo("192.168.1.124", 50014);
+NanoOcp1Client::NanoOcp1Client(const juce::String& address, const int port) :
+	NanoOcp1Base(address, port), juce::InterprocessConnection()
+{
 }
 
 NanoOcp1Client::~NanoOcp1Client()
 {
-	m_tcpClient->close();
+	stop();
 }
 
-void NanoOcp1Client::handleIncomingPacket(const char* msg, size_t size)
+bool NanoOcp1Client::start()
+{
+	return connectToSocket(getAddress(), getPort(), 100);
+}
+
+bool NanoOcp1Client::stop()
+{
+	disconnect();
+
+	return !isConnected();
+}
+
+bool NanoOcp1Client::sendData(const MemoryBlock& data)
+{
+	return juce::InterprocessConnection::sendMessage(data);
+}
+
+void NanoOcp1Client::connectionMade()
 {
 
 }
 
-void NanoOcp1Client::handleDisconnection(const pipe_ret_t& ret)
+void NanoOcp1Client::connectionLost()
 {
 
 }
 
-void NanoOcp1Client::powerOffD40() // "3b 0001 0000001c 01 0001 00000013 00000002 10000100 0004 0002 01 0000"
+void NanoOcp1Client::messageReceived(const MemoryBlock& message)
 {
-	Ocp1Header header;
-	header.m_syncVal = 0x3b;
-	header.m_protoVers = 0x0001;
-	header.m_msgSize = 0x0000001c;
-	header.m_msgType = 0x01;
-	header.m_msgCnt = 0x0001;
-	Ocp1Request request;
-	request.m_cmdSize = 0x00000013;
-	request.m_handle = 0x00000002;
-	request.m_targetONo = 0x10000100;
-	request.m_methIdDefLev = 0x0004;
-	request.m_methIdMethIdx = 0x0002;
-	request.m_paramCnt = 0x01;
-	request.m_data.push_back(0x00);
-	request.m_data.push_back(0x00);
-
-	auto headerData = header.GetSerializedData();
-	auto requestData = request.GetSerializedData();
-	auto& msgData = headerData;
-	msgData.insert(msgData.end(), requestData.begin(), requestData.end());
-    auto retval = m_tcpClient->sendMsg((const char*)msgData.data(), msgData.size());
+	if (onDataReceived)
+		onDataReceived(message);
 }
 
-void NanoOcp1Client::powerOnD40() // "3b 0001 0000001c 01 0001 00000013 00000002 10000100 0004 0002 01 0001"
+//==============================================================================
+NanoOcp1Server::NanoOcp1Server() :
+	NanoOcp1Server(juce::String(), 0)
 {
-	Ocp1Header header;
-	header.m_syncVal = 0x3b;
-	header.m_protoVers = 0x0001;
-	header.m_msgSize = 0x0000001c;
-	header.m_msgType = 0x01;
-	header.m_msgCnt = 0x0001;
-	Ocp1Request request;
-	request.m_cmdSize = 0x00000013;
-	request.m_handle = 0x00000002;
-	request.m_targetONo = 0x10000100;
-	request.m_methIdDefLev = 0x0004;
-	request.m_methIdMethIdx = 0x0002;
-	request.m_paramCnt = 0x01;
-	request.m_data.push_back(0x00);
-	request.m_data.push_back(0x01);
-
-	auto headerData = header.GetSerializedData();
-	auto requestData = request.GetSerializedData();
-	auto& msgData = headerData;
-	msgData.insert(msgData.end(), requestData.begin(), requestData.end());
-	auto retval = m_tcpClient->sendMsg((const char*)msgData.data(), msgData.size());
 }
+
+NanoOcp1Server::NanoOcp1Server(const juce::String& address, const int port) :
+	NanoOcp1Base(address, port), juce::InterprocessConnectionServer()
+{
+}
+
+NanoOcp1Server::~NanoOcp1Server()
+{
+	stop();
+}
+
+bool NanoOcp1Server::start()
+{
+	return beginWaitingForSocket(getPort(), getAddress());
+}
+
+bool NanoOcp1Server::stop()
+{
+	if (m_activeConnection)
+	{
+		m_activeConnection->disconnect();
+		return !m_activeConnection->isConnected();
+	}
+	else
+		return true;
+}
+
+bool NanoOcp1Server::sendData(const MemoryBlock& data)
+{
+	if (!m_activeConnection)
+		return false;
+
+	return m_activeConnection->sendData(data);
+}
+
+InterprocessConnection* NanoOcp1Server::createConnectionObject()
+{
+	m_activeConnection = std::make_unique<NanoOcp1Client>();
+	m_activeConnection->onDataReceived = this->onDataReceived;
+
+	return m_activeConnection.get();
+}
+
 
 }

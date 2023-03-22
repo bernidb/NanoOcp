@@ -10,29 +10,8 @@
 
 #pragma once
 
-#include <chrono>
-#include <future>
-#include <map>
-#include <mutex>
-#include <string>
-#include <thread>
-#include <vector>
+#include <JuceHeader.h>
 
-#ifdef _WIN32
-#include <winsock2.h>
-#include <iphlpapi.h>
-#define sleep(x) Sleep(x * 1000)
-#else
-#include <netdb.h>
-#include <ifaddrs.h>
-#include <net/if.h>
-#endif
-
-#include "../submodules/tcp_server_client/include/client_observer.h"
-#include "../submodules/tcp_server_client/include/server_observer.h"
-
-class TcpClient;
-class TcpServer;
 
 namespace NanoOcp1
 {
@@ -203,42 +182,80 @@ public:
 
 class NanoOcp1Base
 {
-
 public:
-    NanoOcp1Base(std::string name, std::string serviceName);
+    //==============================================================================
+    NanoOcp1Base(const juce::String& address, const int port);
 	~NanoOcp1Base();
 
+    void setAddress(const juce::String& address);
+    const juce::String& getAddress();
+
+    void setPort(const int port);
+    const int getPort();
+
+    //==============================================================================
+    virtual bool start() = 0;
+    virtual bool stop() = 0;
+
+    //==============================================================================
+    virtual bool sendData(const juce::MemoryBlock& data) = 0;
+
+    //==============================================================================
+    std::function<bool(const juce::MemoryBlock&)> onDataReceived;
+
 private:
+    juce::String    m_address;
+    int             m_port{ 0 };
 
 };
 
-class NanoOcp1Server : public NanoOcp1Base, public server_observer_t
+class NanoOcp1Client : public NanoOcp1Base, public juce::InterprocessConnection
 {
 public:
-    NanoOcp1Server(std::string name, std::string serviceName);
-    ~NanoOcp1Server();
-
-private:
-    void handleIncomingPacket(const std::string& clientIP, const char* msg, size_t size);
-    void handleDisconnection(const std::string& ip, const std::string& msg);
-
-    std::unique_ptr<TcpServer> m_tcpServer;
-};
-
-class NanoOcp1Client : public NanoOcp1Base, public client_observer_t
-{
-public:
-    NanoOcp1Client(std::string name, std::string serviceName);
+    //==============================================================================
+    NanoOcp1Client();
+    NanoOcp1Client(const juce::String& address, const int port);
     ~NanoOcp1Client();
 
-    void powerOffD40();
-    void powerOnD40();
+    //==============================================================================
+    bool start();
+    bool stop();
+
+    //==============================================================================
+    bool sendData(const juce::MemoryBlock& data) override;
+
+    //==============================================================================
+    void connectionMade() override;
+    void connectionLost() override;
+    void messageReceived(const juce::MemoryBlock& message) override;
 
 private:
-    void handleIncomingPacket(const char* msg, size_t size);
-    void handleDisconnection(const pipe_ret_t& ret);
+    //==============================================================================
+};
 
-    std::unique_ptr<TcpClient> m_tcpClient;
+class NanoOcp1Server : public NanoOcp1Base, public juce::InterprocessConnectionServer
+{
+public:
+    //==============================================================================
+    NanoOcp1Server();
+    NanoOcp1Server(const juce::String& address, const int port);
+    ~NanoOcp1Server();
+
+    //==============================================================================
+    bool start();
+    bool stop();
+
+    //==============================================================================
+    bool sendData(const MemoryBlock& data) override;
+
+protected:
+    //==============================================================================
+    virtual InterprocessConnection* createConnectionObject() override;
+
+private:
+    //==============================================================================
+
+    std::unique_ptr<NanoOcp1Client> m_activeConnection;
 };
 
 }

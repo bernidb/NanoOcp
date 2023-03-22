@@ -4,27 +4,6 @@
               companyName="Christian Ahrens" companyEmail="christianahrens@me.com"
               companyCopyright="2022" jucerFormatVersion="1" defines="">
   <MAINGROUP id="wsXNhp" name="NanoOcpDemo">
-    <GROUP id="{3482B756-6423-A110-A5E5-7E6AADE98E41}" name="submodules">
-      <GROUP id="{E6327702-ADFE-25DB-51B3-D943A20FA2E6}" name="tcp_server_client">
-        <FILE id="ZZSfeW" name="client.cpp" compile="1" resource="0" file="../submodules/tcp_server_client/src/client.cpp"/>
-        <FILE id="RIMriO" name="client.h" compile="0" resource="0" file="../submodules/tcp_server_client/include/client.h"/>
-        <FILE id="kU6cJW" name="client_event.h" compile="0" resource="0" file="../submodules/tcp_server_client/include/client_event.h"/>
-        <FILE id="bWmpYy" name="client_observer.h" compile="0" resource="0"
-              file="../submodules/tcp_server_client/include/client_observer.h"/>
-        <FILE id="xhNuVD" name="common.cpp" compile="1" resource="0" file="../submodules/tcp_server_client/src/common.cpp"/>
-        <FILE id="qzzuW9" name="common.h" compile="0" resource="0" file="../submodules/tcp_server_client/include/common.h"/>
-        <FILE id="liW4Nw" name="file_descriptor.h" compile="0" resource="0"
-              file="../submodules/tcp_server_client/include/file_descriptor.h"/>
-        <FILE id="wtvHJS" name="pipe_ret_t.cpp" compile="1" resource="0" file="../submodules/tcp_server_client/src/pipe_ret_t.cpp"/>
-        <FILE id="e0ygrA" name="pipe_ret_t.h" compile="0" resource="0" file="../submodules/tcp_server_client/include/pipe_ret_t.h"/>
-        <FILE id="NUW7KP" name="server_observer.h" compile="0" resource="0"
-              file="../submodules/tcp_server_client/include/server_observer.h"/>
-        <FILE id="HvhB5e" name="tcp_client.cpp" compile="1" resource="0" file="../submodules/tcp_server_client/src/tcp_client.cpp"/>
-        <FILE id="rRWWyx" name="tcp_client.h" compile="0" resource="0" file="../submodules/tcp_server_client/include/tcp_client.h"/>
-        <FILE id="wtyaOH" name="tcp_server.cpp" compile="1" resource="0" file="../submodules/tcp_server_client/src/tcp_server.cpp"/>
-        <FILE id="wjmNcr" name="tcp_server.h" compile="0" resource="0" file="../submodules/tcp_server_client/include/tcp_server.h"/>
-      </GROUP>
-    </GROUP>
     <GROUP id="{45B42ABC-4AC3-D8D9-5073-D1AEE8199147}" name="Sources">
       <GROUP id="{DE5292AD-A04C-8CBE-3F3C-5E74276E0314}" name="NanoOcp1">
         <FILE id="TqcSJu" name="NanoOcp1.cpp" compile="1" resource="0" file="../Source/NanoOcp1.cpp"/>
