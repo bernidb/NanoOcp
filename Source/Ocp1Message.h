@@ -123,6 +123,26 @@ public:
     }
 
     /**
+     * Gets the type of the OCA message. (i.e. Notification, KeepAlive, etc).
+     *
+     * @return  Type of OCA message.
+     */
+    std::uint8_t GetMessageType() const
+    {
+        return m_msgType;
+    }
+
+    /**
+     * Gets the size of the OCA message.
+     *
+     * @return  Size of OCA message, in byes.
+     */
+    std::uint32_t GetMessageSize() const
+    {
+        return m_msgSize;
+    }
+
+    /**
      * Returns a vector of bytes representing the binary contents of the header.
      * 
      * @return  A vector of 10 bytes containing the OCA header.
@@ -236,14 +256,7 @@ public:
 
     // Reimplemented from Ocp1Message
 
-    std::vector<std::uint8_t> GetSerializedData() override
-    {
-        std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
-
-        // TODO
-
-        return serializedData;
-    };
+    std::vector<std::uint8_t> GetSerializedData() override;
 
 protected:
     std::uint32_t               m_handle;           // TODO
@@ -275,14 +288,7 @@ public:
 
     // Reimplemented from Ocp1Message
 
-    std::vector<std::uint8_t> GetSerializedData() 
-    {
-        std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
-
-        // TODO
-
-        return serializedData;
-    };
+    std::vector<std::uint8_t> GetSerializedData();
 
 protected:
     std::uint32_t               m_emitterOno;               // TODO
@@ -308,15 +314,7 @@ public:
 
     // Reimplemented from Ocp1Message
 
-    std::vector<std::uint8_t> GetSerializedData() 
-    {
-        std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
-
-        serializedData.push_back(static_cast<std::uint8_t>(m_heartBeat << 8));
-        serializedData.push_back(static_cast<std::uint8_t>(m_heartBeat));
-
-        return serializedData;
-    };
+    std::vector<std::uint8_t> GetSerializedData();
 
 protected:
     std::uint16_t               m_heartBeat;    // Heartbeat time in seconds, typically 5

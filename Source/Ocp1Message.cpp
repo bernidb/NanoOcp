@@ -69,7 +69,7 @@ std::vector<std::uint8_t> DataFromUint16(std::uint16_t value)
     return ret;
 }
 
-std::uint32_t DataToUint32(const std::vector<std::uint8_t>& /*parameterData*/, bool* pOk)
+std::uint32_t DataToUint32(const std::vector<std::uint8_t>& /*parameterData*/, bool* /*pOk*/)
 {
     std::uint32_t ret(0);
 
@@ -127,7 +127,7 @@ std::vector<std::uint8_t> DataFromString(juce::String string)
     return ret;
 }
 
-std::float_t DataToFloat(const std::vector<std::uint8_t>& /*parameterData*/, bool* pOk)
+std::float_t DataToFloat(const std::vector<std::uint8_t>& /*parameterData*/, bool* /*pOk*/)
 {
     std::float_t ret(0);
 
@@ -155,14 +155,14 @@ std::vector<std::uint8_t> Ocp1Header::GetSerializedData() const
     std::vector<std::uint8_t> serializedData;
 
     serializedData.push_back(m_syncVal);
-    serializedData.push_back(static_cast<std::uint8_t>(m_protoVers << 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_protoVers >> 8));
     serializedData.push_back(static_cast<std::uint8_t>(m_protoVers));
-    serializedData.push_back(static_cast<std::uint8_t>(m_msgSize << 24));
-    serializedData.push_back(static_cast<std::uint8_t>(m_msgSize << 16));
-    serializedData.push_back(static_cast<std::uint8_t>(m_msgSize << 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_msgSize >> 24));
+    serializedData.push_back(static_cast<std::uint8_t>(m_msgSize >> 16));
+    serializedData.push_back(static_cast<std::uint8_t>(m_msgSize >> 8));
     serializedData.push_back(static_cast<std::uint8_t>(m_msgSize));
     serializedData.push_back(m_msgType);
-    serializedData.push_back(static_cast<std::uint8_t>(m_msgCnt << 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_msgCnt >> 8));
     serializedData.push_back(static_cast<std::uint8_t>(m_msgCnt));
 
     return serializedData;
@@ -321,5 +321,71 @@ Ocp1Message* Ocp1Message::UnmarshalOcp1Message(const juce::MemoryBlock& received
             return nullptr;
     }
 }
+
+
+//==============================================================================
+// Class Ocp1CommandResponseRequired
+//==============================================================================
+
+std::vector<std::uint8_t> Ocp1CommandResponseRequired::GetSerializedData()
+{
+    std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
+
+    std::uint32_t commandSize(m_header.GetMessageSize() - 9); // Message size minus the header
+    serializedData.push_back(static_cast<std::uint8_t>(commandSize >> 24));
+    serializedData.push_back(static_cast<std::uint8_t>(commandSize >> 16));
+    serializedData.push_back(static_cast<std::uint8_t>(commandSize >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(commandSize));
+    serializedData.push_back(static_cast<std::uint8_t>(m_handle >> 24));
+    serializedData.push_back(static_cast<std::uint8_t>(m_handle >> 16));
+    serializedData.push_back(static_cast<std::uint8_t>(m_handle >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_handle));
+    serializedData.push_back(static_cast<std::uint8_t>(m_targetOno >> 24));
+    serializedData.push_back(static_cast<std::uint8_t>(m_targetOno >> 16));
+    serializedData.push_back(static_cast<std::uint8_t>(m_targetOno >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_targetOno));
+    serializedData.push_back(static_cast<std::uint8_t>(m_methodDefLevel >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_methodDefLevel));
+    serializedData.push_back(static_cast<std::uint8_t>(m_methodIndex >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_methodIndex));
+    serializedData.push_back(static_cast<std::uint8_t>(1)); // ParameterCount
+    for (size_t i = 0; i < m_parameterData.size(); i++)
+    {
+        serializedData.push_back(m_parameterData[i]);
+    }
+
+    return serializedData;
+};
+
+
+
+//==============================================================================
+// Class Ocp1Notification
+//==============================================================================
+
+std::vector<std::uint8_t> Ocp1Notification::GetSerializedData()
+{
+    std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
+
+    // TODO
+
+    return serializedData;
+};
+
+
+
+//==============================================================================
+// Class Ocp1KeepAlive
+//==============================================================================
+
+std::vector<std::uint8_t> Ocp1KeepAlive::GetSerializedData()
+{
+    std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
+
+    serializedData.push_back(static_cast<std::uint8_t>(m_heartBeat >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_heartBeat));
+
+    return serializedData;
+};
 
 }
