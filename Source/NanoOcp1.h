@@ -22,7 +22,8 @@ namespace NanoOcp1
 class Ocp1Header
 {
 public:
-    std::vector<std::uint8_t> GetSerializedData() {
+    std::vector<std::uint8_t> GetSerializedData() 
+    {
         std::vector<std::uint8_t> serializedData;
 
         serializedData.push_back(m_syncVal);
@@ -46,142 +47,192 @@ public:
     std::uint16_t               m_msgCnt;       // 0x00 0x01
 };
 
-class Ocp1Request
+
+/**
+ * Abstract representation of a general OCA Message.
+ */
+class Ocp1Message
 {
 public:
-    std::vector<std::uint8_t> GetSerializedData() {
-        std::vector<std::uint8_t> serializedData;
+    enum MessageType
+    {
+        Command = 0,
+	    CommandResponseRequired = 1,
+	    Notification = 2,
+	    Response = 3,
+	    KeepAlive = 4
+    };
 
-        serializedData.push_back(static_cast<std::uint8_t>(m_cmdSize << 24));
-        serializedData.push_back(static_cast<std::uint8_t>(m_cmdSize << 16));
-        serializedData.push_back(static_cast<std::uint8_t>(m_cmdSize << 8));
-        serializedData.push_back(static_cast<std::uint8_t>(m_cmdSize));
-        serializedData.push_back(static_cast<std::uint8_t>(m_handle << 24));
-        serializedData.push_back(static_cast<std::uint8_t>(m_handle << 16));
-        serializedData.push_back(static_cast<std::uint8_t>(m_handle << 8));
-        serializedData.push_back(static_cast<std::uint8_t>(m_handle));
-        serializedData.push_back(static_cast<std::uint8_t>(m_targetONo << 24));
-        serializedData.push_back(static_cast<std::uint8_t>(m_targetONo << 16));
-        serializedData.push_back(static_cast<std::uint8_t>(m_targetONo << 8));
-        serializedData.push_back(static_cast<std::uint8_t>(m_targetONo));
-        serializedData.push_back(static_cast<std::uint8_t>(m_methIdDefLev << 8));
-        serializedData.push_back(static_cast<std::uint8_t>(m_methIdDefLev));
-        serializedData.push_back(static_cast<std::uint8_t>(m_methIdMethIdx << 8));
-        serializedData.push_back(static_cast<std::uint8_t>(m_methIdMethIdx));
-        serializedData.push_back(m_paramCnt);
-        serializedData.insert(serializedData.end(), m_data.begin(), m_data.end());
+    Ocp1Message(std::uint8_t msgType, const std::vector<std::uint8_t>& parameterData)
+        : m_parameterData(parameterData)
+    {
+        m_header.m_syncVal = 0x3b;
+        m_header.m_protoVers = static_cast<std::uint16_t>(1);
+        m_header.m_msgType = msgType;
+        m_header.m_msgCnt = static_cast<std::uint16_t>(1);
+
+        // TODO: Compute m_msgSize from m_msgType and size of the parameterData.
+        m_header.m_msgSize = static_cast<std::uint16_t>(1); 
+    }
+
+    /**
+     * TODO
+     */
+    virtual std::vector<std::uint8_t> GetSerializedData() = 0;
+
+    /**
+     * TODO
+     */
+    juce::MemoryBlock GetMemoryBlock()
+    {
+        auto serializedData = GetSerializedData();
+        return juce::MemoryBlock((const char*)serializedData.data(), serializedData.size());
+    }
+
+    /**
+     * Factory method which creates a new Ocp1Message object based on a MemoryBlock.
+     * 
+     * TODO
+     */
+    static Ocp1Message* UnmarshalOcp1Message(const juce::MemoryBlock& receivedData);
+
+    /**
+     * TODO
+     */
+    std::uint8_t ValueToUint8(bool* pOk = nullptr) const;
+
+    /**
+     * TODO
+     */
+    bool ValueFromUint8(std::uint8_t newValue);
+
+    /**
+     * TODO
+     */
+    std::uint32_t ValueToUint32(bool* pOk = nullptr) const;
+
+    /**
+     * TODO
+     */
+    bool ValueFromUint32(std::uint32_t newValue);
+
+    /**
+     * TODO
+     */
+    juce::String ValueToString(bool* pOk = nullptr) const;
+
+    /**
+     * TODO
+     */
+    bool ValueFromString(juce::String newValue);
+
+
+protected:
+    Ocp1Header                  m_header;
+    std::vector<std::uint8_t>   m_parameterData;
+    static std::uint32_t        m_nextHandle;
+};
+
+
+/**
+ * Representation of an OCA CommandResponseRequired message.
+ */
+class Ocp1CommandResponseRequired : public Ocp1Message
+{
+public:
+    Ocp1CommandResponseRequired(std::uint32_t targetOno,
+                                std::uint16_t methodDefLevel,
+                                std::uint16_t methodIndex,
+                                const std::vector<std::uint8_t>& parameterData,
+                                std::uint32_t& handle)
+        : Ocp1Message(static_cast<std::uint8_t>(CommandResponseRequired), parameterData),
+            m_targetOno(targetOno),
+            m_methodDefLevel(methodDefLevel),
+            m_methodIndex(methodIndex)
+    {
+        m_handle = m_nextHandle;
+        handle = m_handle;
+        m_nextHandle++;
+    }
+
+    std::vector<std::uint8_t> GetSerializedData() override
+    {
+        std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
+
+        // TODO
 
         return serializedData;
     };
 
-    std::uint32_t               m_cmdSize;      // 0x00 0x00 0x00 0x11
-    std::uint32_t               m_handle;       // 0x00 0x00 0x00 0x01
-    std::uint32_t               m_targetONo;    // 0x10 0x01 0x02 0x25
-    std::uint16_t               m_methIdDefLev; // 0x00 0x04
-    std::uint16_t               m_methIdMethIdx;// 0x00 0x01
-    std::uint8_t                m_paramCnt;     // 0x00
-    std::vector<std::uint8_t>   m_data;
+protected:
+    std::uint32_t               m_handle;
+    std::uint32_t               m_targetOno;
+    std::uint16_t               m_methodDefLevel;
+    std::uint16_t               m_methodIndex;
 };
 
-class Ocp1ResponseBaseData
+
+/**
+ * Representation of an Oca Notification message.
+ */
+class Ocp1Notification : public Ocp1Message
 {
 public:
-    std::vector<std::uint8_t> GetSerializedData() {
-        std::vector<std::uint8_t> serializedData;
+    Ocp1Notification(std::uint32_t emitterOno,
+                     std::uint16_t emitterPropertyDefLevel,
+                     std::uint16_t emitterPropertyIndex,
+                     const std::vector<std::uint8_t>& parameterData)
+        : Ocp1Message(static_cast<std::uint8_t>(Notification), parameterData),
+            m_emitterOno(emitterOno),
+            m_emitterPropertyDefLevel(emitterPropertyDefLevel),
+            m_emitterPropertyIndex(emitterPropertyIndex)
+    {
+    }
 
+    std::vector<std::uint8_t> GetSerializedData() 
+    {
+        std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
 
+        // TODO
 
         return serializedData;
     };
 
-    std::uint8_t                m_respParamCnt;  // 0x03
-    std::vector<std::uint8_t>   m_respParamData; // 0x00 0x00 0x00 0x00 0x00 0x01
+protected:
+    std::uint32_t               m_emitterOno;
+    std::uint16_t               m_emitterPropertyDefLevel;
+    std::uint16_t               m_emitterPropertyIndex;
 };
 
-class Ocp1BooleanSensorResponseData : public Ocp1ResponseBaseData
-{
-    // Resp Param Cnt  0x01
-    // Resp Param Data
-    // Value       0x00
-};
 
-class Ocp1SwitchResponseData : public Ocp1ResponseBaseData
-{
-    // Resp Param Cnt  0x03
-    // Resp Param Data
-    // Value       0x00 0x00
-    // Min         0x00 0x00
-    // Max         0x00 0x01
-
-};
-
-class Ocp1MuteResponseData : public Ocp1ResponseBaseData
-{
-    // Resp Param Cnt  0x01
-    // Resp Param Data
-    // Value       0x00
-};
-
-class Ocp1GainResponseData : public Ocp1ResponseBaseData
-{
-    // Resp Param Cnt  0x03
-    // Resp Param Data
-    // Value       0x00 0x00 0x00 0x00
-    // Min         0x00 0x00 0x00 0x00
-    // Max         0x00 0x00 0x00 0x00
-};
-
-class Ocp1StringActuatorResponseData : public Ocp1ResponseBaseData
-{
-    // Resp Param Cnt  0x01
-    // Resp Param Data
-    // SizeofStr   0x00 0x00
-    // String -
-};
- 
-class Ocp1StringSensorResponseData : public Ocp1ResponseBaseData
-{
-    // Resp Param Cnt  0x01
-    // Resp Param Data
-    // SizeofStr   0x00 0x00
-    // String -
-};
-
-class Ocp1Int16SensorResponseData : public Ocp1ResponseBaseData
-{
-    // Resp Param Cnt  0x03
-    // Resp Param Data
-    // Value       0x00 0x00
-    // Min         0x00 0x00
-    // Max         0x00 0x00
-};
-
-class Ocp1Int32SensorResponseData : public Ocp1ResponseBaseData
-{
-    // Resp Param Cnt  0x03
-    // Resp Param Data
-    // Value       0x00 0x00 0x00 0x00
-    // Min         0x00 0x00 0x00 0x00
-    // Max         0x00 0x00 0x00 0x00
-};
-
-class Ocp1Int64SensorResponseData : public Ocp1ResponseBaseData
-{
-    // Resp Param Cnt  0x03
-    // Resp Param Data
-    // Value       0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-    // Min         0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-    // Max         0x00 0x00 0x00 0x00 0x00 0x00 0x00 0x00
-};
-
-class Ocp1Response
+/**
+ * Representation of an Oca KeepAlive message. 
+ */
+class Ocp1KeepAlive : public Ocp1Message
 {
 public:
-    std::uint32_t           m_rspSize;  // 0x00 0x00 0x00 0x10
-    std::uint32_t           m_handle;   // 0x00 0x00 0x00 0x01
-    std::uint8_t            m_stat;     // 0x00
-    Ocp1ResponseBaseData    m_respData; // 0x00 0x00 0x00 0x00 0x00 0x01
+    Ocp1KeepAlive(std::uint16_t heartBeat)
+        : Ocp1Message(static_cast<std::uint8_t>(KeepAlive), std::vector<std::uint8_t>()),
+            m_heartBeat(heartBeat)
+    {
+    }
+
+    std::vector<std::uint8_t> GetSerializedData() 
+    {
+        std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
+
+        serializedData.push_back(static_cast<std::uint8_t>(m_heartBeat << 8));
+        serializedData.push_back(static_cast<std::uint8_t>(m_heartBeat));
+
+        return serializedData;
+    };
+
+protected:
+    std::uint16_t               m_heartBeat;    // 0x00 0x05
 };
+
+
+
 
 class NanoOcp1Base
 {

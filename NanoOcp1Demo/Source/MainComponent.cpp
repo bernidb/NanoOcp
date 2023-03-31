@@ -26,55 +26,24 @@ MainComponent::MainComponent()
 	m_nanoOcp1Client->start();
 
     m_powerOffD40Button = std::make_unique<TextButton>("Power Off D40");
-    m_powerOffD40Button->onClick = [=]() {
-		NanoOcp1::Ocp1Header header;
-		header.m_syncVal = 0x3b;
-		header.m_protoVers = 0x0001;
-		header.m_msgSize = 0x0000001c;
-		header.m_msgType = 0x01;
-		header.m_msgCnt = 0x0001;
-		NanoOcp1::Ocp1Request request;
-		request.m_cmdSize = 0x00000013;
-		request.m_handle = 0x00000002;
-		request.m_targetONo = 0x10000100;
-		request.m_methIdDefLev = 0x0004;
-		request.m_methIdMethIdx = 0x0002;
-		request.m_paramCnt = 0x01;
-		request.m_data.push_back(0x00);
-		request.m_data.push_back(0x00);
+    m_powerOffD40Button->onClick = [=]() 
+	{
+		std::vector<std::uint8_t> parameterData;
+		parameterData.push_back(static_cast<std::uint8_t>(0));
+		parameterData.push_back(static_cast<std::uint8_t>(0)); // Position OFF
 
-		auto headerData = header.GetSerializedData();
-		auto requestData = request.GetSerializedData();
-		auto& msgData = headerData;
-		msgData.insert(msgData.end(), requestData.begin(), requestData.end());
-
-		m_nanoOcp1Client->sendData(juce::MemoryBlock((const char*)msgData.data(), msgData.size()));
+		std::uint32_t handle;
+		m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(0x10000100,	// ONO of Settings_PwrOn
+																		 4,				// OcaSwitch level
+																		 2,				// SetPosition method
+																		 parameterData,
+																		 handle).GetMemoryBlock());
 	};
     addAndMakeVisible(m_powerOffD40Button.get());
 
     m_powerOnD40Button = std::make_unique<TextButton>("Power On D40");
-    m_powerOnD40Button->onClick = [=]() {
-		NanoOcp1::Ocp1Header header;
-		header.m_syncVal = 0x3b;
-		header.m_protoVers = 0x0001;
-		header.m_msgSize = 0x0000001c;
-		header.m_msgType = 0x01;
-		header.m_msgCnt = 0x0001;
-		NanoOcp1::Ocp1Request request;
-		request.m_cmdSize = 0x00000013;
-		request.m_handle = 0x00000002;
-		request.m_targetONo = 0x10000100;
-		request.m_methIdDefLev = 0x0004;
-		request.m_methIdMethIdx = 0x0002;
-		request.m_paramCnt = 0x01;
-		request.m_data.push_back(0x00);
-		request.m_data.push_back(0x01);
-
-		auto headerData = header.GetSerializedData();
-		auto requestData = request.GetSerializedData();
-		auto& msgData = headerData;
-		msgData.insert(msgData.end(), requestData.begin(), requestData.end());
-		m_nanoOcp1Client->sendData(juce::MemoryBlock((const char*)msgData.data(), msgData.size()));
+    m_powerOnD40Button->onClick = [=]() 
+	{
 	};
     addAndMakeVisible(m_powerOnD40Button.get());
 	m_ipAndPortEditor = std::make_unique<TextEditor>();
