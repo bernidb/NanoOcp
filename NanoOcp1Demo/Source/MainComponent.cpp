@@ -11,6 +11,7 @@
 #include "MainComponent.h"
 
 #include "../../Source/NanoOcp1.h"
+#include "../../Source/Ocp1Message.h"
 
 
 namespace NanoOcp1Demo
@@ -28,15 +29,11 @@ MainComponent::MainComponent()
     m_powerOffD40Button = std::make_unique<TextButton>("Power Off D40");
     m_powerOffD40Button->onClick = [=]() 
 	{
-		std::vector<std::uint8_t> parameterData;
-		parameterData.push_back(static_cast<std::uint8_t>(0));
-		parameterData.push_back(static_cast<std::uint8_t>(0)); // Position OFF
-
 		std::uint32_t handle;
 		m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(0x10000100,	// ONO of Settings_PwrOn
 																		 4,				// OcaSwitch level
 																		 2,				// SetPosition method
-																		 parameterData,
+																		 NanoOcp1::DataFromUint16(0), // Position OFF
 																		 handle).GetMemoryBlock());
 	};
     addAndMakeVisible(m_powerOffD40Button.get());
@@ -44,6 +41,12 @@ MainComponent::MainComponent()
     m_powerOnD40Button = std::make_unique<TextButton>("Power On D40");
     m_powerOnD40Button->onClick = [=]() 
 	{
+		std::uint32_t handle;
+		m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(0x10000100,	// ONO of Settings_PwrOn
+																		 4,				// OcaSwitch level
+																		 2,				// SetPosition method
+																		 NanoOcp1::DataFromUint16(1), // Position ON
+																		 handle).GetMemoryBlock());
 	};
     addAndMakeVisible(m_powerOnD40Button.get());
 	m_ipAndPortEditor = std::make_unique<TextEditor>();
@@ -56,6 +59,7 @@ MainComponent::MainComponent()
 
 MainComponent::~MainComponent()
 {
+    m_nanoOcp1Client->stop();
 }
 
 {
