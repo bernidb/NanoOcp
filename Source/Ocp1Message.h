@@ -123,6 +123,13 @@ public:
     }
 
     /**
+     * Class destructor.
+     */
+    virtual ~Ocp1Header()
+    {
+    }
+
+    /**
      * Gets the type of the OCA message. (i.e. Notification, KeepAlive, etc).
      *
      * @return  Type of OCA message.
@@ -180,10 +187,10 @@ public:
     enum MessageType
     {
         Command = 0,                    // Command - No response required. 
-	    CommandResponseRequired = 1,    // Command - Response required.
-	    Notification = 2,               // Notification.
-	    Response = 3,                   // Response (to a command).
-	    KeepAlive = 4                   // KeepAlive message used for device supervision. 
+        CommandResponseRequired = 1,    // Command - Response required.
+        Notification = 2,               // Notification.
+        Response = 3,                   // Response (to a command).
+        KeepAlive = 4                   // KeepAlive message used for device supervision. 
     };
 
     /**
@@ -193,6 +200,33 @@ public:
         :   m_parameterData(parameterData),
             m_header(Ocp1Header(msgType, parameterData.size()))
     {
+    }
+
+    /**
+     * Class destructor.
+     */
+    virtual ~Ocp1Message()
+    {
+    }
+
+    /**
+     * Gets the type of the OCA message. (i.e. Notification, KeepAlive, etc).
+     *
+     * @return  Type of OCA message.
+     */
+    std::uint8_t GetMessageType() const
+    {
+        return m_header.GetMessageType();
+    }
+
+    /**
+     * Returns a vector of bytes representing the parameter data contained in the message.
+     *
+     * @return  A vector containing the OCA message including header.
+     */
+    std::vector<std::uint8_t> GetParameterData()
+    {
+        return m_parameterData;
     }
 
     /**
@@ -220,12 +254,24 @@ public:
      * 
      * TODO
      */
-    static Ocp1Message* UnmarshalOcp1Message(const juce::MemoryBlock& receivedData);
+    static std::unique_ptr<Ocp1Message> UnmarshalOcp1Message(const juce::MemoryBlock& receivedData);
 
 protected:
     Ocp1Header                  m_header;           // TODO
     std::vector<std::uint8_t>   m_parameterData;
     static std::uint32_t        m_nextHandle;
+};
+
+
+/**
+ * Helper struct to encapsulate paraeters for a OCA CommandResponseRequired message.
+ */
+struct Ocp1CommandParameters
+{
+    std::uint32_t targetOno;
+    std::uint16_t methodDefLevel;
+    std::uint16_t methodIndex;
+    const std::vector<std::uint8_t>& parameterData;
 };
 
 
@@ -253,6 +299,23 @@ public:
         handle = m_handle;
         m_nextHandle++;
     }
+
+    /**
+     * Class constructor that takes parameters via a Ocp1CommandParameters struct.
+     */
+    Ocp1CommandResponseRequired(const Ocp1CommandParameters& params,
+                                std::uint32_t& handle)
+        : Ocp1CommandResponseRequired(params.targetOno, params.methodDefLevel, params.methodIndex, params.parameterData, handle)
+    {
+    }
+
+    /**
+     * Class destructor.
+     */
+    ~Ocp1CommandResponseRequired() override
+    {
+    }
+
 
     // Reimplemented from Ocp1Message
 
@@ -286,6 +349,13 @@ public:
     {
     }
 
+    /**
+     * Class destructor.
+     */
+    ~Ocp1Notification() override
+    {
+    }
+
     // Reimplemented from Ocp1Message
 
     std::vector<std::uint8_t> GetSerializedData();
@@ -311,6 +381,14 @@ public:
             m_heartBeat(heartBeat)
     {
     }
+
+    /**
+     * Class destructor.
+     */
+    ~Ocp1KeepAlive() override
+    {
+    }
+
 
     // Reimplemented from Ocp1Message
 

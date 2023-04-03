@@ -11,7 +11,7 @@
 #include "MainComponent.h"
 
 #include "../../Source/NanoOcp1.h"
-#include "../../Source/Ocp1Message.h"
+#include "../../Source/Ocp1ObjectDefinitions.h"
 
 
 namespace NanoOcp1Demo
@@ -20,41 +20,75 @@ namespace NanoOcp1Demo
 //==============================================================================
 MainComponent::MainComponent()
 {
-	auto address = juce::String("127.0.0.1");
-	auto port = 50014;
+    auto address = juce::String("127.0.0.1");
+    auto port = 50014;
 
     m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>(address, port);
 	m_nanoOcp1Client->start();
 
     m_powerOffD40Button = std::make_unique<TextButton>("Power Off D40");
     m_powerOffD40Button->onClick = [=]() 
-	{
-		std::uint32_t handle;
-		m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(0x10000100,	// ONO of Settings_PwrOn
-																		 4,				// OcaSwitch level
-																		 2,				// SetPosition method
-																		 NanoOcp1::DataFromUint16(0), // Position OFF
-																		 handle).GetMemoryBlock());
-	};
+    {
+        std::uint32_t handle;
+        m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn_Off,
+                                                                         handle).GetMemoryBlock());
+    };
     addAndMakeVisible(m_powerOffD40Button.get());
 
     m_powerOnD40Button = std::make_unique<TextButton>("Power On D40");
     m_powerOnD40Button->onClick = [=]() 
-	{
-		std::uint32_t handle;
-		m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(0x10000100,	// ONO of Settings_PwrOn
-																		 4,				// OcaSwitch level
-																		 2,				// SetPosition method
-																		 NanoOcp1::DataFromUint16(1), // Position ON
-																		 handle).GetMemoryBlock());
-	};
+    {
+        std::uint32_t handle;
+        m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn_On,
+                                                                         handle).GetMemoryBlock());
+    };
     addAndMakeVisible(m_powerOnD40Button.get());
 	m_ipAndPortEditor = std::make_unique<TextEditor>();
 	m_ipAndPortEditor->setTextToShowWhenEmpty(address + ";" + juce::String(port), getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId).darker().darker());
 	m_ipAndPortEditor->addListener(this);
 	addAndMakeVisible(m_ipAndPortEditor.get());
     
-	setSize(150, 150);
+    setSize(150, 150);
+
+
+
+
+    // ==== TODO: move this code to NanoOcp1Client::messageReceived ====
+    if(true)
+    {
+        NanoOcp1::Ocp1Notification notif1(static_cast<std::uint32_t>(0x10000100), // emitterOno
+                                          static_cast<std::uint16_t>(4), // emitterPropertyDefLevel
+                                          static_cast<std::uint16_t>(2), // emitterPropertyIndex
+                                          NanoOcp1::DataFromUint16(1)); // parameterData
+
+        juce::MemoryBlock notif1Mem = notif1.GetMemoryBlock();
+
+        // recieve notification...
+
+        std::unique_ptr<NanoOcp1::Ocp1Message> receivedMsg = NanoOcp1::Ocp1Message::UnmarshalOcp1Message(notif1Mem);
+
+        switch (receivedMsg->GetMessageType())
+        {
+            case NanoOcp1::Ocp1Message::Notification:
+                {
+                    NanoOcp1::Ocp1Notification* notif2 = static_cast<NanoOcp1::Ocp1Notification*>(receivedMsg.get());
+
+                    // check ono, defLevel, propIdx
+
+                    std::uint16_t switchSetting = NanoOcp1::DataToUint16(notif2->GetParameterData());
+                }
+                break;
+            case NanoOcp1::Ocp1Message::Response:
+                {
+                    // TODO
+                }
+                break;
+            case NanoOcp1::Ocp1Message::KeepAlive:
+                // Reset online timer
+                break;
+        }
+
+    }
 }
 
 MainComponent::~MainComponent()

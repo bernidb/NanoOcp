@@ -203,7 +203,7 @@ std::uint32_t Ocp1Header::CalculateMessageSize(std::uint8_t msgType, size_t para
 
 std::uint32_t Ocp1Message::m_nextHandle = 1;
 
-Ocp1Message* Ocp1Message::UnmarshalOcp1Message(const juce::MemoryBlock& receivedData)
+std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::MemoryBlock& receivedData)
 {
     // Not enough data to fit even a Ocp1Header.
     if (receivedData.getSize() <= 10)
@@ -248,12 +248,12 @@ Ocp1Message* Ocp1Message::UnmarshalOcp1Message(const juce::MemoryBlock& received
                 if (targetOno == 0)
                     return nullptr;
 
-                // Method DefinitionLevel expected to be ? TODO
+                // Method DefinitionLevel expected to be 3 (OcaSubscriptionManager)
                 std::uint16_t methodDefLevel = ((receivedData[18] << 8) + receivedData[19]);
                 if (methodDefLevel < 1)
                     return nullptr;
 
-                // Method index expected to be ? TODO
+                // Method index expected to be 1 (AddSubscription)
                 std::uint16_t methodIdx = ((receivedData[20] << 8) + receivedData[21]);
                 if (methodIdx < 1)
                     return nullptr;
@@ -298,7 +298,7 @@ Ocp1Message* Ocp1Message::UnmarshalOcp1Message(const juce::MemoryBlock& received
                     parameterData.push_back(static_cast<std::uint8_t>(receivedData[37 + contextSize + i]));
                 }
 
-                return new Ocp1Notification(emitterOno, propDefLevel, propIdx, parameterData);
+                return std::make_unique<Ocp1Notification>(emitterOno, propDefLevel, propIdx, parameterData);
             }
 
         case Response:
@@ -311,12 +311,15 @@ Ocp1Message* Ocp1Message::UnmarshalOcp1Message(const juce::MemoryBlock& received
             {
                 std::uint16_t heartbeat = ((receivedData[10] << 8) + receivedData[11]);
 
-                return new Ocp1KeepAlive(heartbeat);
+                return std::make_unique<Ocp1KeepAlive>(heartbeat);
             }
 
-        // No messages of these types should normally be received at a controller.
         case Command:
         case CommandResponseRequired:
+            {
+                // TODO
+                return nullptr;
+            }
         default:
             return nullptr;
     }
@@ -367,7 +370,45 @@ std::vector<std::uint8_t> Ocp1Notification::GetSerializedData()
 {
     std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
 
-    // TODO
+    std::uint32_t notificationSize(m_header.GetMessageSize() - 9); // Message size minus the header
+    serializedData.push_back(static_cast<std::uint8_t>(notificationSize >> 24));
+    serializedData.push_back(static_cast<std::uint8_t>(notificationSize >> 16));
+    serializedData.push_back(static_cast<std::uint8_t>(notificationSize >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(notificationSize));
+    serializedData.push_back(static_cast<std::uint8_t>(m_emitterOno >> 24)); // TargetOno
+    serializedData.push_back(static_cast<std::uint8_t>(m_emitterOno >> 16));
+    serializedData.push_back(static_cast<std::uint8_t>(m_emitterOno >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_emitterOno));
+    std::uint16_t methodDefLevel = 3; // OcaSubscriptionManager
+    serializedData.push_back(static_cast<std::uint8_t>(methodDefLevel >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(methodDefLevel));
+    std::uint16_t methodIdx = 1; // AddSubscription
+    serializedData.push_back(static_cast<std::uint8_t>(methodIdx >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(methodIdx));
+    std::uint16_t paramCount = 2;
+    serializedData.push_back(static_cast<std::uint8_t>(paramCount));
+    std::uint16_t contextLength = 0;
+    serializedData.push_back(static_cast<std::uint8_t>(contextLength >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(contextLength));
+    serializedData.push_back(static_cast<std::uint8_t>(m_emitterOno >> 24)); // EmitterOno
+    serializedData.push_back(static_cast<std::uint8_t>(m_emitterOno >> 16));
+    serializedData.push_back(static_cast<std::uint8_t>(m_emitterOno >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_emitterOno));
+    std::uint16_t eventDefLevel = 1; // OcaRoot level
+    serializedData.push_back(static_cast<std::uint8_t>(eventDefLevel >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(eventDefLevel));
+    std::uint16_t eventIdx = 1; // PropertyChanged event
+    serializedData.push_back(static_cast<std::uint8_t>(eventIdx >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(eventIdx));
+    serializedData.push_back(static_cast<std::uint8_t>(m_emitterPropertyDefLevel >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_emitterPropertyDefLevel));
+    serializedData.push_back(static_cast<std::uint8_t>(m_emitterPropertyIndex >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_emitterPropertyIndex));
+    for (size_t i = 0; i < m_parameterData.size(); i++)
+    {
+        serializedData.push_back(m_parameterData[i]);
+    }
+    serializedData.push_back(static_cast<std::uint8_t>(1)); // Ending byte
 
     return serializedData;
 };
