@@ -102,6 +102,14 @@ std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* o
  */
 std::vector<std::uint8_t> DataFromFloat(std::float_t value);
 
+/**
+ * Convinience helper method to generate a byte vector containing the parameters
+ * necessary for an AddSubscription command for a given object.
+ *
+ * @param[in] ono     ONo of the object that the subscription shall be added for.
+ * @return  The parameters as a byte vector.
+ */
+std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono);
 
 
 /**
@@ -271,6 +279,7 @@ struct Ocp1CommandParameters
     std::uint32_t targetOno;
     std::uint16_t methodDefLevel;
     std::uint16_t methodIndex;
+    std::uint8_t paramCount;
     const std::vector<std::uint8_t>& parameterData;
 };
 
@@ -287,12 +296,14 @@ public:
     Ocp1CommandResponseRequired(std::uint32_t targetOno,
                                 std::uint16_t methodDefLevel,
                                 std::uint16_t methodIndex,
+                                std::uint8_t paramCount,
                                 const std::vector<std::uint8_t>& parameterData,
                                 std::uint32_t& handle)
         : Ocp1Message(static_cast<std::uint8_t>(CommandResponseRequired), parameterData),
             m_targetOno(targetOno),
             m_methodDefLevel(methodDefLevel),
-            m_methodIndex(methodIndex)
+            m_methodIndex(methodIndex),
+            m_paramCount(paramCount)
     {
         // Return a new unique handle every time this class is instantiated.
         m_handle = m_nextHandle;
@@ -305,7 +316,8 @@ public:
      */
     Ocp1CommandResponseRequired(const Ocp1CommandParameters& params,
                                 std::uint32_t& handle)
-        : Ocp1CommandResponseRequired(params.targetOno, params.methodDefLevel, params.methodIndex, params.parameterData, handle)
+        : Ocp1CommandResponseRequired(params.targetOno, params.methodDefLevel, params.methodIndex, 
+                                      params.paramCount, params.parameterData, handle)
     {
     }
 
@@ -326,6 +338,7 @@ protected:
     std::uint32_t               m_targetOno;
     std::uint16_t               m_methodDefLevel;
     std::uint16_t               m_methodIndex;
+    std::uint8_t                m_paramCount;
 };
 
 

@@ -24,79 +24,101 @@ MainComponent::MainComponent()
     auto port = 50014;
 
     m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>(address, port);
-	m_nanoOcp1Client->start();
+    m_nanoOcp1Client->onDataReceived = [=](const juce::MemoryBlock& message)
+    {
+        return OnOcp1MessageReceived(message);
+    };
+    m_nanoOcp1Client->start();
 
-    m_powerOffD40Button = std::make_unique<TextButton>("Power Off D40");
+    m_ipAndPortEditor = std::make_unique<TextEditor>();
+    m_ipAndPortEditor->setTextToShowWhenEmpty(address + ";" + juce::String(port), getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId).darker().darker());
+    m_ipAndPortEditor->addListener(this);
+    addAndMakeVisible(m_ipAndPortEditor.get());
+
+    // Button for AddSubscription
+    m_subscribePowerD40Button = std::make_unique<TextButton>("Pwr Subscribe");
+    m_subscribePowerD40Button->onClick = [=]()
+    {
+        std::uint32_t handle;
+        m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn,
+                                                                         handle).GetMemoryBlock());
+    };
+    addAndMakeVisible(m_subscribePowerD40Button.get());
+
+    // Button to act as Power display LED 
+    m_powerD40LED = std::make_unique<TextButton>("Power LED");
+    m_powerD40LED->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::forestgreen);
+    m_powerD40LED->setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::dimgrey);
+    m_powerD40LED->setToggleState(false, dontSendNotification);
+    addAndMakeVisible(m_powerD40LED.get());
+
+    // Button to power OFF the D40
+    m_powerOffD40Button = std::make_unique<TextButton>("Pwr Off");
     m_powerOffD40Button->onClick = [=]() 
     {
         std::uint32_t handle;
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn_Off,
                                                                          handle).GetMemoryBlock());
+        m_powerD40LED->setToggleState(false, dontSendNotification);
     };
     addAndMakeVisible(m_powerOffD40Button.get());
 
-    m_powerOnD40Button = std::make_unique<TextButton>("Power On D40");
+    // Button to power ON the D40
+    m_powerOnD40Button = std::make_unique<TextButton>("Pwr On");
     m_powerOnD40Button->onClick = [=]() 
     {
         std::uint32_t handle;
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn_On,
                                                                          handle).GetMemoryBlock());
+        m_powerD40LED->setToggleState(true, dontSendNotification);
     };
     addAndMakeVisible(m_powerOnD40Button.get());
-	m_ipAndPortEditor = std::make_unique<TextEditor>();
-	m_ipAndPortEditor->setTextToShowWhenEmpty(address + ";" + juce::String(port), getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId).darker().darker());
-	m_ipAndPortEditor->addListener(this);
-	addAndMakeVisible(m_ipAndPortEditor.get());
     
-    setSize(150, 150);
+    setSize(150, 200);
+}
 
+bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
+{
+    std::unique_ptr<NanoOcp1::Ocp1Message> msgObj = NanoOcp1::Ocp1Message::UnmarshalOcp1Message(message);
+    if (msgObj)
 
-
-
-    // ==== TODO: move this code to NanoOcp1Client::messageReceived ====
-    if(true)
+    switch (msgObj->GetMessageType())
     {
-        NanoOcp1::Ocp1Notification notif1(static_cast<std::uint32_t>(0x10000100), // emitterOno
-                                          static_cast<std::uint16_t>(4), // emitterPropertyDefLevel
-                                          static_cast<std::uint16_t>(2), // emitterPropertyIndex
-                                          NanoOcp1::DataFromUint16(1)); // parameterData
+        case NanoOcp1::Ocp1Message::Notification:
+            {
+                NanoOcp1::Ocp1Notification* notifObj = static_cast<NanoOcp1::Ocp1Notification*>(msgObj.get());
 
-        juce::MemoryBlock notif1Mem = notif1.GetMemoryBlock();
+                // check ono, defLevel, propIdx
 
-        // recieve notification...
+                // Update GUI according to new value
+                std::uint16_t switchSetting = NanoOcp1::DataToUint16(notifObj->GetParameterData());
+                m_powerD40LED->setToggleState(switchSetting > 0, dontSendNotification);
 
-        std::unique_ptr<NanoOcp1::Ocp1Message> receivedMsg = NanoOcp1::Ocp1Message::UnmarshalOcp1Message(notif1Mem);
+                return true;
+            }
+        case NanoOcp1::Ocp1Message::Response:
+            {
+                // TODO: check handle, use new value
 
-        switch (receivedMsg->GetMessageType())
-        {
-            case NanoOcp1::Ocp1Message::Notification:
-                {
-                    NanoOcp1::Ocp1Notification* notif2 = static_cast<NanoOcp1::Ocp1Notification*>(receivedMsg.get());
-
-                    // check ono, defLevel, propIdx
-
-                    std::uint16_t switchSetting = NanoOcp1::DataToUint16(notif2->GetParameterData());
-                }
-                break;
-            case NanoOcp1::Ocp1Message::Response:
-                {
-                    // TODO
-                }
-                break;
-            case NanoOcp1::Ocp1Message::KeepAlive:
+                return true;
+            }
+        case NanoOcp1::Ocp1Message::KeepAlive:
+            {
                 // Reset online timer
-                break;
-        }
 
+                return true;
+            }
+        default:
+            break;
     }
+
+    return false;
 }
 
 MainComponent::~MainComponent()
 {
     m_nanoOcp1Client->stop();
 }
-
-{
 
 void MainComponent::textEditorReturnKeyPressed(TextEditor& editor)
 {
@@ -114,20 +136,27 @@ void MainComponent::textEditorReturnKeyPressed(TextEditor& editor)
 
 void MainComponent::resized()
 {
-    auto button1Bounds = getLocalBounds();
-    auto button2Bounds = button1Bounds.removeFromBottom(button1Bounds.getHeight() / 2);
-	auto connectionParamsHeight = 35;
+    auto bounds = getLocalBounds();
 
-	auto bounds = getLocalBounds();
+    auto connectionParamsHeight = 35;
 
-	auto textEditorBounds = bounds.removeFromTop(connectionParamsHeight).reduced(5);
-	m_ipAndPortEditor->setBounds(textEditorBounds);
+    auto textEditorBounds = bounds.removeFromTop(connectionParamsHeight).reduced(5);
+    m_ipAndPortEditor->setBounds(textEditorBounds);
+
+    auto button1Bounds = bounds;
+    auto button2Bounds = button1Bounds.removeFromRight(button1Bounds.getWidth() / 2);
+    auto button3Bounds = button2Bounds.removeFromBottom(button2Bounds.getHeight() / 2);
+    auto button4Bounds = button1Bounds.removeFromBottom(button1Bounds.getHeight() / 2);
 
     button1Bounds.reduce(5, 5);
     button2Bounds.reduce(5, 5);
+    button3Bounds.reduce(5, 5);
+    button4Bounds.reduce(5, 5);
 
-    m_powerOffD40Button->setBounds(button1Bounds);
-    m_powerOnD40Button->setBounds(button2Bounds);
+    m_subscribePowerD40Button->setBounds(button1Bounds);
+    m_powerD40LED->setBounds(button2Bounds);
+    m_powerOffD40Button->setBounds(button3Bounds);
+    m_powerOnD40Button->setBounds(button4Bounds);
 }
 
 }

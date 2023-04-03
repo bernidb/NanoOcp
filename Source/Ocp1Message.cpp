@@ -145,6 +145,39 @@ std::vector<std::uint8_t> DataFromFloat(std::float_t /*value*/)
     return ret;
 }
 
+std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono)
+{
+    std::vector<std::uint8_t> ret;
+    ret.reserve(21);
+
+    ret.push_back(static_cast<std::uint8_t>(ono >> 24)); // Emitter ONo
+    ret.push_back(static_cast<std::uint8_t>(ono >> 16));
+    ret.push_back(static_cast<std::uint8_t>(ono >> 8));
+    ret.push_back(static_cast<std::uint8_t>(ono));
+    ret.push_back(static_cast<std::uint8_t>(0x01)); // EventID def level: OcaRoot
+    ret.push_back(static_cast<std::uint8_t>(0x01)); // EventID idx: PropertyChanged
+
+    ret.push_back(static_cast<std::uint8_t>(ono >> 24)); // Subscriber ONo
+    ret.push_back(static_cast<std::uint8_t>(ono >> 16));
+    ret.push_back(static_cast<std::uint8_t>(ono >> 8));
+    ret.push_back(static_cast<std::uint8_t>(ono));
+    ret.push_back(static_cast<std::uint8_t>(0x03)); // Method def level: OcaSubscriptionManager
+    ret.push_back(static_cast<std::uint8_t>(0x01)); // Method idx: AddSubscription
+
+    ret.push_back(static_cast<std::uint8_t>(0x00)); // Context size: 0
+    ret.push_back(static_cast<std::uint8_t>(0x00));
+    ret.push_back(static_cast<std::uint8_t>(0x01)); // Delivery mode: Reliable
+
+    ret.push_back(static_cast<std::uint8_t>(0x00)); // Destination info length: always 4
+    ret.push_back(static_cast<std::uint8_t>(0x04));
+    ret.push_back(static_cast<std::uint8_t>(0x00)); // Destination info (4 empty bytes)
+    ret.push_back(static_cast<std::uint8_t>(0x00));
+    ret.push_back(static_cast<std::uint8_t>(0x00));
+    ret.push_back(static_cast<std::uint8_t>(0x00));
+
+    return ret;
+}
+
 
 //==============================================================================
 // Class Ocp1Header
@@ -351,7 +384,7 @@ std::vector<std::uint8_t> Ocp1CommandResponseRequired::GetSerializedData()
     serializedData.push_back(static_cast<std::uint8_t>(m_methodDefLevel));
     serializedData.push_back(static_cast<std::uint8_t>(m_methodIndex >> 8));
     serializedData.push_back(static_cast<std::uint8_t>(m_methodIndex));
-    serializedData.push_back(static_cast<std::uint8_t>(1)); // ParameterCount
+    serializedData.push_back(static_cast<std::uint8_t>(m_paramCount));
     for (size_t i = 0; i < m_parameterData.size(); i++)
     {
         serializedData.push_back(m_parameterData[i]);
