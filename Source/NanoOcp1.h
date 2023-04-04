@@ -12,6 +12,9 @@
 
 #include <JuceHeader.h>
 
+#include "Ocp1Connection.h"
+#include "Ocp1ConnectionServer.h"
+
 
 namespace NanoOcp1
 {
@@ -220,7 +223,7 @@ private:
 
 };
 
-class NanoOcp1Client : public NanoOcp1Base, public juce::InterprocessConnection, public juce::Timer
+class NanoOcp1Client : public NanoOcp1Base, public Ocp1Connection, public juce::Timer
 {
 public:
     //==============================================================================
@@ -249,7 +252,7 @@ private:
     bool m_started{ false };
 };
 
-class NanoOcp1Server : public NanoOcp1Base, public juce::InterprocessConnectionServer
+class NanoOcp1Server : public NanoOcp1Base, public Ocp1ConnectionServer
 {
 public:
     //==============================================================================
@@ -262,11 +265,11 @@ public:
     bool stop();
 
     //==============================================================================
-    bool sendData(const MemoryBlock& data) override;
+    bool sendData(const juce::MemoryBlock& data) override;
 
 protected:
     //==============================================================================
-    virtual InterprocessConnection* createConnectionObject() override;
+    Ocp1Connection* createConnectionObject() override;
 
 private:
     //==============================================================================
