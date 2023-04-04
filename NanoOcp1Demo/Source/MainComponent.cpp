@@ -23,6 +23,7 @@ MainComponent::MainComponent()
 	auto port = 50014;
 
     m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>(address, port);
+	m_nanoOcp1Client->start();
 
     m_powerOffD40Button = std::make_unique<TextButton>("Power Off D40");
     m_powerOffD40Button->onClick = [=]() {
@@ -76,6 +77,10 @@ MainComponent::MainComponent()
 		m_nanoOcp1Client->sendData(juce::MemoryBlock((const char*)msgData.data(), msgData.size()));
 	};
     addAndMakeVisible(m_powerOnD40Button.get());
+	m_ipAndPortEditor = std::make_unique<TextEditor>();
+	m_ipAndPortEditor->setTextToShowWhenEmpty(address + ";" + juce::String(port), getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId).darker().darker());
+	m_ipAndPortEditor->addListener(this);
+	addAndMakeVisible(m_ipAndPortEditor.get());
     
 	setSize(150, 150);
 }
@@ -84,15 +89,32 @@ MainComponent::~MainComponent()
 {
 }
 
-void MainComponent::paint (Graphics& g)
 {
-	g.fillAll(Colours::white);
+
+void MainComponent::textEditorReturnKeyPressed(TextEditor& editor)
+{
+	if (&editor == m_ipAndPortEditor.get())
+	{
+		auto ip = editor.getText().upToFirstOccurrenceOf(";", false, true);
+		auto port = editor.getText().fromLastOccurrenceOf(";", false, true).getIntValue();
+		
+		m_nanoOcp1Client->stop();
+		m_nanoOcp1Client->setAddress(ip);
+		m_nanoOcp1Client->setPort(port);
+		m_nanoOcp1Client->start();
+	}
 }
 
 void MainComponent::resized()
 {
     auto button1Bounds = getLocalBounds();
     auto button2Bounds = button1Bounds.removeFromBottom(button1Bounds.getHeight() / 2);
+	auto connectionParamsHeight = 35;
+
+	auto bounds = getLocalBounds();
+
+	auto textEditorBounds = bounds.removeFromTop(connectionParamsHeight).reduced(5);
+	m_ipAndPortEditor->setBounds(textEditorBounds);
 
     button1Bounds.reduce(5, 5);
     button2Bounds.reduce(5, 5);
