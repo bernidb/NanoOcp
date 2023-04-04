@@ -46,6 +46,31 @@ const int NanoOcp1Base::getPort()
 	return m_port;
 }
 
+bool NanoOcp1Base::processReceivedData(const juce::MemoryBlock& data)
+{
+	if (onDataReceived)
+		return onDataReceived(data);
+
+	return false;
+}
+
+std::uint32_t NanoOcp1Base::GetDBONo(std::uint32_t type, std::uint32_t record, std::uint32_t channel, std::uint32_t boxAndObjectNumber)
+{
+	return (std::uint32_t((type) & 0xF) << 28) 
+		| (std::uint32_t((record) & 0xFF) << 20) 
+		| (std::uint32_t((channel) & 0x1F) << 15) 
+		| (std::uint32_t(boxAndObjectNumber) & 0x7FFF);
+}
+
+std::uint32_t NanoOcp1Base::GetDBONo2(std::uint32_t type, std::uint32_t record, std::uint32_t channel, std::uint32_t boxNumber, std::uint32_t objectNumber)
+{
+	return (std::uint32_t((type) & 0xF) << 28)
+		| (std::uint32_t((record) & 0xFF) << 20)
+		| (std::uint32_t((channel) & 0xFF) << 12)
+		| (std::uint32_t((boxNumber) & 0x1F) << 7)
+		| (std::uint32_t((objectNumber) & 0x7F));
+}
+
 //==============================================================================
 NanoOcp1Client::NanoOcp1Client() :
 	NanoOcp1Client(juce::String(), 0)
@@ -64,11 +89,22 @@ NanoOcp1Client::~NanoOcp1Client()
 
 bool NanoOcp1Client::start()
 {
-	return connectToSocket(getAddress(), getPort(), 100);
+	m_started = true;
+
+	if (connectToSocket(getAddress(), getPort(), 50))
+		return true; // connection immediatly established
+	else
+		startTimer(500); // start trying to establish connection
+
+	return false;
 }
 
 bool NanoOcp1Client::stop()
 {
+	m_started = false;
+
+	stopTimer();
+
 	disconnect();
 
 	return !isConnected();
@@ -76,23 +112,38 @@ bool NanoOcp1Client::stop()
 
 bool NanoOcp1Client::sendData(const MemoryBlock& data)
 {
+	if (!isConnected())
+		return false;
+
 	return juce::InterprocessConnection::sendMessage(data);
 }
 
 void NanoOcp1Client::connectionMade()
 {
+	stopTimer();
 
+	if (onConnectionEstablished)
+		onConnectionEstablished();
 }
 
 void NanoOcp1Client::connectionLost()
 {
+	if (onConnectionLost)
+		onConnectionLost();
 
+	if (m_started)
+		startTimer(500); // start trying to reestablish connection
 }
 
 void NanoOcp1Client::messageReceived(const MemoryBlock& message)
 {
-	if (onDataReceived)
-		onDataReceived(message);
+	processReceivedData(message);
+}
+
+void NanoOcp1Client::timerCallback()
+{
+	if (connectToSocket(getAddress(), getPort(), 50))
+		stopTimer(); // connection established, no need to retry
 }
 
 //==============================================================================
