@@ -49,6 +49,7 @@ private:
     
     //==============================================================================
     std::unique_ptr<TextEditor>     m_ipAndPortEditor;
+    std::unique_ptr<TextButton>     m_connectedLED;
     std::unique_ptr<TextButton>     m_subscribePowerD40Button;
     std::unique_ptr<TextButton>     m_powerD40LED;
     std::unique_ptr<TextButton>     m_powerOnD40Button;

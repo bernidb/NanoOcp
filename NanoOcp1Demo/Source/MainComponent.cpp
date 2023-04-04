@@ -23,25 +23,37 @@ MainComponent::MainComponent()
     auto address = juce::String("127.0.0.1");
     auto port = 50014;
 
-    m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>(address, port);
-    m_nanoOcp1Client->onDataReceived = [=](const juce::MemoryBlock& message)
-    {
-        return OnOcp1MessageReceived(message);
-    };
-    m_nanoOcp1Client->start();
-
+    // Editor to allow user input for ip address and port to use to connect
     m_ipAndPortEditor = std::make_unique<TextEditor>();
     m_ipAndPortEditor->setTextToShowWhenEmpty(address + ";" + juce::String(port), getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId).darker().darker());
     m_ipAndPortEditor->addListener(this);
     addAndMakeVisible(m_ipAndPortEditor.get());
+    
+    // connected status visu
+    m_connectedLED = std::make_unique<TextButton>("con");
+    m_connectedLED->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::forestgreen);
+    m_connectedLED->setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::dimgrey);
+    m_connectedLED->setToggleState(false, dontSendNotification);
+    m_connectedLED->setEnabled(false);
+    addAndMakeVisible(m_connectedLED.get());
 
     // Button for AddSubscription
     m_subscribePowerD40Button = std::make_unique<TextButton>("Pwr Subscribe");
+    m_subscribePowerD40Button->setClickingTogglesState(true);
     m_subscribePowerD40Button->onClick = [=]()
     {
-        std::uint32_t handle;
-        m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn,
-                                                                         handle).GetMemoryBlock());
+        if (m_subscribePowerD40Button->getToggleState())
+        {
+            std::uint32_t handle;
+            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn,
+                handle).GetMemoryBlock());
+        }
+        else
+        {
+            //std::uint32_t handle;
+            //m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_RemoveSubscription_Settings_PwrOn,
+            //    handle).GetMemoryBlock());
+        }
     };
     addAndMakeVisible(m_subscribePowerD40Button.get());
 
@@ -50,6 +62,7 @@ MainComponent::MainComponent()
     m_powerD40LED->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::forestgreen);
     m_powerD40LED->setColour(juce::TextButton::ColourIds::buttonColourId, juce::Colours::dimgrey);
     m_powerD40LED->setToggleState(false, dontSendNotification);
+    m_powerD40LED->setEnabled(false);
     addAndMakeVisible(m_powerD40LED.get());
 
     // Button to power OFF the D40
@@ -74,7 +87,25 @@ MainComponent::MainComponent()
     };
     addAndMakeVisible(m_powerOnD40Button.get());
     
-    setSize(150, 200);
+    setSize(250, 200);
+
+    // create the nano ocp1 client and fire it up
+    m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>(address, port);
+    m_nanoOcp1Client->onDataReceived = [=](const juce::MemoryBlock& message)
+    {
+        return OnOcp1MessageReceived(message);
+    };
+    m_nanoOcp1Client->onConnectionEstablished = [=]()
+    {
+        if (m_connectedLED)
+            m_connectedLED->setToggleState(true, juce::dontSendNotification);
+    };
+    m_nanoOcp1Client->onConnectionLost = [=]()
+    {
+        if (m_connectedLED)
+            m_connectedLED->setToggleState(false, juce::dontSendNotification);
+    };
+    m_nanoOcp1Client->start();
 }
 
 bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
@@ -139,9 +170,12 @@ void MainComponent::resized()
     auto bounds = getLocalBounds();
 
     auto connectionParamsHeight = 35;
+    auto connectionLedWidth = 45;
 
-    auto textEditorBounds = bounds.removeFromTop(connectionParamsHeight).reduced(5);
-    m_ipAndPortEditor->setBounds(textEditorBounds);
+    auto textEditorBounds = bounds.removeFromTop(connectionParamsHeight);
+    auto connectedLedBounds = textEditorBounds.removeFromRight(connectionLedWidth);
+    m_connectedLED->setBounds(connectedLedBounds.reduced(5));
+    m_ipAndPortEditor->setBounds(textEditorBounds.reduced(5));
 
     auto button1Bounds = bounds;
     auto button2Bounds = button1Bounds.removeFromRight(button1Bounds.getWidth() / 2);

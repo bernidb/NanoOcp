@@ -48,4 +48,13 @@ Ocp1CommandParameters dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn
     DataFromOnoForSubscription(0x10000100) // ONO of Settings_PwrOn
 };
 
+//Ocp1CommandParameters dbOcaObjectDef_Dy_RemoveSubscription_Settings_PwrOn
+//{
+//    0x00000004,         // ONO of OcaSubscriptionManager
+//    3,                  // OcaSubscriptionManager level
+//    2,                  // RemoveSubscription method
+//    5,                  // 5 Params 
+//    DataFromOnoForSubscription(0x10000100) // ONO of Settings_PwrOn
+//};
+
 }
