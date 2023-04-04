@@ -183,6 +183,88 @@ public:
 class NanoOcp1Base
 {
 public:
+	enum DS100MatrixInputObjectNumber
+	{
+		MatrixInputBox = 0x00, // MatrixInput_Box
+		MatrixInputMute = 0x01, // MatrixInput_Mute
+		MatrixInputGain = 0x02, // MatrixInput_Gain
+        MatrixInputDelay = 0x03, // MatrixInput_Delay
+        MatrixInputDelayEnable = 0x04, // MatrixInput_DelayEnable
+        MatrixInputEqEnable = 0x05, // MatrixInput_EqEnable
+        MatrixInputPolarity = 0x06, // MatrixInput_Polarity
+		MatrixInputChannelName = 0x07, // MatrixInput_ChannelName
+		MatrixInputLevelMeterIn = 0x08, // MatrixInput_LevelMeterIn
+		MatrixInputLevelMeterPreMute = 0x09, // MatrixInput_LevelMeterPreMute
+		MatrixInputLevelMeterPostMute = 0x0A, // MatrixInput_LevelMeterPostMute
+		MatrixInputReverbSendGain = 0x0D, // MatrixInput_ReverbSendGain
+	};
+	enum DS100MatrixOutputObjectNumber
+	{
+		MatrixOutputBox = 0x00, // MatrixOutput_Box
+		MatrixOutputMute = 0x01, // MatrixOutput_Mute
+		MatrixOutputGain = 0x02, // MatrixOutput_Gain
+		MatrixOutputDelay = 0x03, // MatrixOutput_Delay
+		MatrixOutputDelayEnable = 0x04, // MatrixOutput_DelayEnable
+		MatrixOutputEqEnable = 0x05, // MatrixOutput_EqEnable
+		MatrixOutputPolarity = 0x06, // MatrixOutput_Polarity
+		MatrixOutputChannelName = 0x07, // MatrixOutput_ChannelName
+		MatrixOutputLevelMeterIn = 0x08, // MatrixOutput_LevelMeterIn
+		MatrixOutputLevelMeterPreMute = 0x09, // MatrixOutput_LevelMeterPreMute
+		MatrixOutputLevelMeterPostMute = 0x0A, // MatrixOutput_LevelMeterPostMute
+		MatrixOutputOSP = 0x0B, // MatrixOutput_OSP
+		MatrixOutputReverbSelect = 0x0D, // MatrixOutput_ReverbSelect
+		MatrixOutputReverbMute = 0x0E, // MatrixOutput_ReverbMute
+		MatrixOutputReverbGain = 0x0F, // MatrixOutput_ReverbGain
+		MatrixOutputReverbChannelName = 0x10, // MatrixOutput_ReverbChannelName
+		MatrixOutputReverbLevelMeter = 0x11, // MatrixOutput_ReverbLevelMeter
+	};
+    enum DS100PositioningObjectNumber
+    {
+		PositioningBox = 0x00, // Positioning_Box
+		PositioningPosition = 0x02, // Positioning_Source_Position
+		PositioningEnable = 0x03, // Positioning_Source_Enable
+		PositioningSpread = 0x04, // Positioning_Source_Spread
+		PositioningSpeakerGroup = 0x06, // Positioning_Speaker_Group
+		PositioningSpeakerPosition = 0x07, // Positioning_Speaker_Position
+		PositioningPositionX = 0x08, // Positioning_Source_Position_X
+		PositioningPositionY = 0x09, // Positioning_Source_Position_Y
+		PositioningPositionZ = 0x0A, // Positioning_Source_Position_Z
+		PositioningDelayMode = 0x0B, // Positioning_Source_DelayMode
+    };
+    enum DS100FunctionGroupObjectNumber
+    {
+		FunctionGroupBox = 0x00, // FunctionGroup_Box
+		FunctionGroupName = 0x01, // FunctionGroup_Name
+		FunctionGroupDelay = 0x02, // FunctionGroup_Delay
+		FunctionGroupMode = 0x03, // FunctionGroup_Mode
+		FunctionGroupModelName = 0x04, // FunctionGroup_ModeName
+		FunctionGroupSpeakerCount = 0x05, // FunctionGroup_SpeakerCount
+		FunctionGroupSpreadFactor = 0x06, // FunctionGroup_SpreadFactor
+	};
+    enum DS100ScenesObjectNumber
+    {
+        ScenesBox = 0x00, // Scenes_Box
+        ScenesSceneIndex = 0x01, // Scene_SceneIndex
+        ScenesSceneIndexNum = 0x02, // Scene_SceneIndexNum
+        ScenesSceneName = 0x03, // Scene_SceneName
+        ScenesSceneComment = 0x04, // Scene_SceneComment
+    };
+    enum DS100CoordinateMappingObjectNumber
+    {
+        CoordinateMappingBox = 0x00, // CoordinateMapping_Box
+        CoordinateMappingSourcePosition = 0x01, // CoordinateMapping_Source_Position
+    };
+
+    // DS100 Box numbers
+    static constexpr std::uint16_t DS100FixedBox { 0 };
+    static constexpr std::uint16_t DS100MatrixInputBox { 5 };
+    static constexpr std::uint16_t DS100MatrixOutputBox { 8 };
+    static constexpr std::uint16_t DS100PositioningBox { 13 };
+    static constexpr std::uint16_t DS100FunctionGroupBox { 14 };
+    static constexpr std::uint16_t DS100CoordinateMappingBox { 22 };
+    static constexpr std::uint16_t DS100ScenesBox { 23 };
+
+public:
     //==============================================================================
     NanoOcp1Base(const juce::String& address, const int port);
 	~NanoOcp1Base();
