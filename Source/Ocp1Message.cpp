@@ -127,20 +127,38 @@ std::vector<std::uint8_t> DataFromString(juce::String string)
     return ret;
 }
 
-std::float_t DataToFloat(const std::vector<std::uint8_t>& /*parameterData*/, bool* /*pOk*/)
+std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* pOk)
 {
     std::float_t ret(0);
 
-    // TODO
+    bool ok = (parameterData.size() == 4); // 4 bytes expected.
+    ok = (sizeof(int) == sizeof(std::float_t)); // Required for pointer cast to work
+    if (ok)
+    {
+        int intValue = ((parameterData[0] << 24) + (parameterData[1] << 16) + (parameterData[2] << 8) + parameterData[3]);
+        ret = *(std::float_t*)&intValue;
+    }
+
+    if (pOk != nullptr)
+    {
+        *pOk = ok;
+    }
 
     return ret;
 }
 
-std::vector<std::uint8_t> DataFromFloat(std::float_t /*value*/)
+std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue)
 {
     std::vector<std::uint8_t> ret;
+    ret.reserve(4);
 
-    // TODO
+    jassert(sizeof(std::uint32_t) == sizeof(std::float_t)); // Required for pointer cast to work
+    std::uint32_t intValue = *(std::uint32_t*)&floatValue;
+
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
 
     return ret;
 }
@@ -369,7 +387,9 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
                     return nullptr;
 
                 // Not a valid object number.
-                std::uint32_t targetOno = ((receivedData[14] << 24) + (receivedData[15] << 16) + (receivedData[16] << 8) + receivedData[17]);
+                std::uint32_t targetOno = (((receivedData[14] << 24) & 0xff000000) + 
+                                           ((receivedData[15] << 16) & 0x00ff0000) + 
+                                           ((receivedData[16] << 8)  & 0x0000ff00) + receivedData[17]);
                 if (targetOno == 0)
                     return nullptr;
 
@@ -391,8 +411,9 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
                 std::uint16_t contextSize = ((receivedData[23] << 8) + receivedData[24]);
 
                 // Not a valid object number.
-                std::uint32_t emitterOno = ((receivedData[25 + contextSize] << 24) + (receivedData[26 + contextSize] << 16) + 
-                                           (receivedData[27 + contextSize] << 8) + receivedData[28 + contextSize]);
+                std::uint32_t emitterOno = (((receivedData[25 + contextSize] << 24) & 0xff000000) +
+                                            ((receivedData[26 + contextSize] << 16) & 0x00ff0000) +
+                                            ((receivedData[27 + contextSize] << 8)  & 0x0000ff00) + receivedData[28 + contextSize]);
                 if (emitterOno == 0)
                     return nullptr;
 

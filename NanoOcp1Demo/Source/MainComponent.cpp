@@ -38,24 +38,27 @@ MainComponent::MainComponent()
     addAndMakeVisible(m_connectedLED.get());
 
     // Button for AddSubscription
-    m_subscribePowerD40Button = std::make_unique<TextButton>("Pwr Subscribe");
-    m_subscribePowerD40Button->setClickingTogglesState(true);
-    m_subscribePowerD40Button->onClick = [=]()
+    m_subscribeButton = std::make_unique<TextButton>("Subscribe");
+    m_subscribeButton->setClickingTogglesState(true);
+    m_subscribeButton->onClick = [=]()
     {
-        if (m_subscribePowerD40Button->getToggleState())
+        if (m_subscribeButton->getToggleState())
         {
             std::uint32_t handle;
             m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn,
-                handle).GetMemoryBlock());
+                                                                             handle).GetMemoryBlock());
+            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Config_PotiLevel_ChA,
+                                                                             handle).GetMemoryBlock());
         }
         else
         {
+            // TODO
             //std::uint32_t handle;
             //m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_RemoveSubscription_Settings_PwrOn,
             //    handle).GetMemoryBlock());
         }
     };
-    addAndMakeVisible(m_subscribePowerD40Button.get());
+    addAndMakeVisible(m_subscribeButton.get());
 
     // Button to act as Power display LED 
     m_powerD40LED = std::make_unique<TextButton>("Power LED");
@@ -84,8 +87,22 @@ MainComponent::MainComponent()
                                                                          handle).GetMemoryBlock());
     };
     addAndMakeVisible(m_powerOnD40Button.get());
-    
-    setSize(250, 200);
+
+    // Gain slider for Channel A
+    m_gainSlider = std::make_unique<Slider>(Slider::LinearVertical, Slider::TextBoxBelow);
+    m_gainSlider->setRange(-57.5, 6, 0.5);
+    m_gainSlider->setTextValueSuffix("dB");
+    m_gainSlider->onValueChange = [=]()
+    {
+        std::uint32_t handle;
+        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Config_PotiLevel_ChA);
+        cmdDef.parameterData = NanoOcp1::DataFromFloat(static_cast<std::float_t>(m_gainSlider->getValue()));
+
+        m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
+    };
+    addAndMakeVisible(m_gainSlider.get());
+
+    setSize(300, 200);
 
     // create the nano ocp1 client and fire it up
     m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>(address, port);
@@ -117,11 +134,18 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
                 {
                     NanoOcp1::Ocp1Notification* notifObj = static_cast<NanoOcp1::Ocp1Notification*>(msgObj.get());
 
-                    // check ono, defLevel, propIdx
-
-                    // Update GUI according to new value
-                    std::uint16_t switchSetting = NanoOcp1::DataToUint16(notifObj->GetParameterData());
-                    m_powerD40LED->setToggleState(switchSetting > 0, dontSendNotification);
+                    // Update the right GUI element according to the definition of the object 
+                    // which triggered the notification.
+                    if (notifObj->MatchesObject(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn_Off.targetOno))
+                    {
+                        std::uint16_t switchSetting = NanoOcp1::DataToUint16(notifObj->GetParameterData());
+                        m_powerD40LED->setToggleState(switchSetting > 0, dontSendNotification);
+                    }
+                    else if (notifObj->MatchesObject(NanoOcp1::dbOcaObjectDef_Dy_Config_PotiLevel_ChA.targetOno))
+                    {
+                        std::float_t newGain = NanoOcp1::DataToFloat(notifObj->GetParameterData());
+                        m_gainSlider->setValue(newGain, dontSendNotification);
+                    }
 
                     return true;
                 }
@@ -175,12 +199,15 @@ void MainComponent::resized()
     auto bounds = getLocalBounds();
 
     auto connectionParamsHeight = 35;
-    auto connectionLedWidth = 45;
+    auto connectionLedWidth = 60;
 
     auto textEditorBounds = bounds.removeFromTop(connectionParamsHeight);
     auto connectedLedBounds = textEditorBounds.removeFromRight(connectionLedWidth);
     m_connectedLED->setBounds(connectedLedBounds.reduced(5));
     m_ipAndPortEditor->setBounds(textEditorBounds.reduced(5));
+
+    auto sliderBounds = bounds.removeFromRight(connectionLedWidth);
+    m_gainSlider->setBounds(sliderBounds.reduced(5));
 
     auto button1Bounds = bounds;
     auto button2Bounds = button1Bounds.removeFromRight(button1Bounds.getWidth() / 2);
@@ -192,7 +219,7 @@ void MainComponent::resized()
     button3Bounds.reduce(5, 5);
     button4Bounds.reduce(5, 5);
 
-    m_subscribePowerD40Button->setBounds(button1Bounds);
+    m_subscribeButton->setBounds(button1Bounds);
     m_powerD40LED->setBounds(button2Bounds);
     m_powerOffD40Button->setBounds(button3Bounds);
     m_powerOnD40Button->setBounds(button4Bounds);

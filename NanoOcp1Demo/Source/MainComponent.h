@@ -38,7 +38,7 @@ public:
     void resized() override;
 
     //==============================================================================
-    void textEditorReturnKeyPressed(TextEditor& editor);
+    void textEditorReturnKeyPressed(TextEditor& editor) override;
 
     //==============================================================================
     bool OnOcp1MessageReceived(const juce::MemoryBlock& message);
@@ -50,10 +50,11 @@ private:
     //==============================================================================
     std::unique_ptr<TextEditor>     m_ipAndPortEditor;
     std::unique_ptr<TextButton>     m_connectedLED;
-    std::unique_ptr<TextButton>     m_subscribePowerD40Button;
+    std::unique_ptr<TextButton>     m_subscribeButton;
     std::unique_ptr<TextButton>     m_powerD40LED;
     std::unique_ptr<TextButton>     m_powerOnD40Button;
     std::unique_ptr<TextButton>     m_powerOffD40Button;
+    std::unique_ptr<Slider>         m_gainSlider;
 
     JUCE_DECLARE_NON_COPYABLE_WITH_LEAK_DETECTOR (MainComponent)
 };

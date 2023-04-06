@@ -100,7 +100,7 @@ std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* o
  * @param[in] value     Value to be converted.
  * @return  The value as a byte vector.
  */
-std::vector<std::uint8_t> DataFromFloat(std::float_t value);
+std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue);
 
 /**
  * Convinience helper method to generate a byte vector containing the parameters
@@ -299,7 +299,7 @@ struct Ocp1CommandParameters
     std::uint16_t methodDefLevel;
     std::uint16_t methodIndex;
     std::uint8_t paramCount;
-    const std::vector<std::uint8_t>& parameterData;
+    std::vector<std::uint8_t> parameterData;
 };
 
 
@@ -455,6 +455,20 @@ public:
      */
     ~Ocp1Notification() override
     {
+    }
+
+    /**
+     * Helper method which matches this notification to a given object definition.
+     * 
+     * @param[in] TODO
+     * @return  True if this notification was triggered by the given object.
+     */
+    bool MatchesObject(std::uint32_t emitterOno/*, 
+                       std::uint16_t emitterPropertyDefLevel,
+                       std::uint16_t emitterPropertyIndex*/) const
+    {
+        // TODO compare defLevel and index 
+        return (emitterOno == m_emitterOno);
     }
 
     // Reimplemented from Ocp1Message

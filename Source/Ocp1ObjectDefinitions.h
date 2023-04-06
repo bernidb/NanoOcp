@@ -57,4 +57,22 @@ Ocp1CommandParameters dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn
 //    DataFromOnoForSubscription(0x10000100) // ONO of Settings_PwrOn
 //};
 
+Ocp1CommandParameters dbOcaObjectDef_Dy_Config_PotiLevel_ChA
+{
+    0x10008206,         // ONO of Config_PotiLevel Ch 1
+    4,                  // OcaGain level
+    2,                  // SetGain method
+    1,                  // 1 Param
+    std::vector<std::uint8_t>()  // Property value needs to be set outside this struct definition.
+};
+
+Ocp1CommandParameters dbOcaObjectDef_Dy_AddSubscription_Config_PotiLevel_ChA
+{
+    0x00000004,         // ONO of OcaSubscriptionManager
+    3,                  // OcaSubscriptionManager level
+    1,                  // AddSubscription method
+    5,                  // 5 Params 
+    DataFromOnoForSubscription(0x10008206) // ONO of Config_PotiLevel Ch 1
+};
+
 }
