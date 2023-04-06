@@ -148,21 +148,25 @@ std::vector<std::uint8_t> DataFromFloat(std::float_t /*value*/)
 std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono)
 {
     std::vector<std::uint8_t> ret;
-    ret.reserve(21);
+    ret.reserve(25);
 
     ret.push_back(static_cast<std::uint8_t>(ono >> 24)); // Emitter ONo
     ret.push_back(static_cast<std::uint8_t>(ono >> 16));
     ret.push_back(static_cast<std::uint8_t>(ono >> 8));
     ret.push_back(static_cast<std::uint8_t>(ono));
-    ret.push_back(static_cast<std::uint8_t>(0x01)); // EventID def level: OcaRoot
-    ret.push_back(static_cast<std::uint8_t>(0x01)); // EventID idx: PropertyChanged
+    ret.push_back(static_cast<std::uint8_t>(0x00)); // EventID def level: OcaRoot
+    ret.push_back(static_cast<std::uint8_t>(0x01)); 
+    ret.push_back(static_cast<std::uint8_t>(0x00)); // EventID idx: PropertyChanged
+    ret.push_back(static_cast<std::uint8_t>(0x01)); 
 
     ret.push_back(static_cast<std::uint8_t>(ono >> 24)); // Subscriber ONo
     ret.push_back(static_cast<std::uint8_t>(ono >> 16));
     ret.push_back(static_cast<std::uint8_t>(ono >> 8));
     ret.push_back(static_cast<std::uint8_t>(ono));
-    ret.push_back(static_cast<std::uint8_t>(0x03)); // Method def level: OcaSubscriptionManager
-    ret.push_back(static_cast<std::uint8_t>(0x01)); // Method idx: AddSubscription
+    ret.push_back(static_cast<std::uint8_t>(0x00)); // Method def level: OcaSubscriptionManager
+    ret.push_back(static_cast<std::uint8_t>(0x03)); 
+    ret.push_back(static_cast<std::uint8_t>(0x00)); // Method idx: AddSubscription
+    ret.push_back(static_cast<std::uint8_t>(0x01)); 
 
     ret.push_back(static_cast<std::uint8_t>(0x00)); // Context size: 0
     ret.push_back(static_cast<std::uint8_t>(0x00));
@@ -178,10 +182,100 @@ std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono)
     return ret;
 }
 
+juce::String StatusToString(std::uint8_t status)
+{
+    juce::String result;
+
+    switch (status)
+    {
+        case 0: // OCASTATUS_OK:
+            result = juce::String("OK");
+            break;
+        case 1: // OCASTATUS_PROTOCOL_VERSION_ERROR:
+            result = juce::String("ProtocolVersionError");
+            break;
+        case 2: // OCASTATUS_DEVICE_ERROR:
+            result = juce::String("DeviceError");
+            break;
+        case 3: // OCASTATUS_LOCKED:
+            result = juce::String("Locked");
+            break;
+        case 4: // OCASTATUS_BAD_FORMAT:
+            result = juce::String("BadFormat");
+            break;
+        case 5: // OCASTATUS_BAD_ONO:
+            result = juce::String("BadONo");
+            break;
+        case 6: // OCASTATUS_PARAMETER_ERROR:
+            result = juce::String("ParameterError");
+            break;
+        case 7: // OCASTATUS_PARAMETER_OUT_OF_RANGE:
+            result = juce::String("ParameterOutOfRange");
+            break;
+        case 8: // OCASTATUS_NOT_IMPLEMENTED:
+            result = juce::String("NotImplemented");
+            break;
+        case 9: // OCASTATUS_INVALID_REQUEST:
+            result = juce::String("InvalidRequest");
+            break;
+        case 10: // OCASTATUS_PROCESSING_FAILED:
+            result = juce::String("ProcessingFailed");
+            break;
+        case 11: // OCASTATUS_BAD_METHOD:
+            result = juce::String("BadMethod");
+            break;
+        case 12: // OCASTATUS_PARTIALLY_SUCCEEDED:
+            result = juce::String("PartiallySucceeded");
+            break;
+        case 13: // OCASTATUS_TIMEOUT:
+            result = juce::String("Timeout");
+            break;
+        case 14: // OCASTATUS_BUFFER_OVERFLOW:
+            result = juce::String("BufferOverflow");
+            break;
+        case 15: // OCASTATUS_PERMISSION_DENIED:
+            result = juce::String("PermissionDenied");
+            break;
+        default:
+            result = juce::String(status);
+            break;
+    }
+
+    return result;
+}
+
+
 
 //==============================================================================
 // Class Ocp1Header
 //==============================================================================
+
+Ocp1Header::Ocp1Header(const juce::MemoryBlock& memoryBlock)
+    :   m_syncVal(static_cast<std::uint8_t>(0)),
+        m_protoVers(static_cast<std::uint16_t>(0)),
+        m_msgType(static_cast<std::uint8_t>(0)),
+        m_msgCnt(static_cast<std::uint16_t>(0)),
+        m_msgSize(static_cast<std::uint32_t>(0))
+{
+    jassert(memoryBlock.getSize() >= 10); // Not enough data to fit even a Ocp1Header.
+    if (memoryBlock.getSize() >= 10)
+    {
+        m_syncVal = memoryBlock[0];
+        jassert(m_syncVal == 0x3b); // Message does not start with the sync byte.
+
+        m_protoVers = ((memoryBlock[1] << 8) + memoryBlock[2]);
+        jassert(m_protoVers == 1); // Protocol version is expected to be 1.
+        
+        m_msgSize = ((memoryBlock[3] << 24) + (memoryBlock[4] << 16) + (memoryBlock[5] << 8) + memoryBlock[6]);
+        jassert(m_msgSize >= Ocp1HeaderSize); // Message has unexpected size.
+
+        m_msgType = memoryBlock[7];
+        jassert(m_msgType <= Ocp1Message::KeepAlive); // Message type outside expected range.
+
+        m_msgCnt = ((memoryBlock[8] << 8) + memoryBlock[9]);
+        jassert(m_msgCnt > 0); // At least one message expected. 
+    }
+}
 
 std::vector<std::uint8_t> Ocp1Header::GetSerializedData() const
 {
@@ -208,8 +302,6 @@ std::uint32_t Ocp1Header::CalculateMessageSize(std::uint8_t msgType, size_t para
     switch (msgType)
     {
         case Ocp1Message::Command:
-            // TODO
-            break;
         case Ocp1Message::CommandResponseRequired:
             ret = static_cast<std::uint32_t>(26 + parameterDataLength);
             break;
@@ -217,7 +309,7 @@ std::uint32_t Ocp1Header::CalculateMessageSize(std::uint8_t msgType, size_t para
             ret = static_cast<std::uint32_t>(37 + parameterDataLength);
             break;
         case Ocp1Message::Response:
-            ret = static_cast<std::uint32_t>(19);
+            ret = static_cast<std::uint32_t>(19 + parameterDataLength);
             break;
         case Ocp1Message::KeepAlive:
             ret = static_cast<std::uint32_t>(11);
@@ -270,7 +362,7 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
     switch (msgType)
     {
         case Notification:
-            {           
+            {
                 std::uint32_t notificationSize = ((receivedData[10] << 24) + (receivedData[11] << 16) + (receivedData[12] << 8) + receivedData[13]);
                 std::uint32_t newValueSize = notificationSize - 28;
                 if (newValueSize < 1)
@@ -336,8 +428,30 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
 
         case Response:
             {
-                // TODO
-                return nullptr;
+                std::uint32_t responseSize = ((receivedData[10] << 24) + (receivedData[11] << 16) + (receivedData[12] << 8) + receivedData[13]);
+                std::uint32_t parameterDataLength = responseSize - 10;
+                if (responseSize < 10)
+                    return nullptr;
+
+                // Not a valid handle.
+                std::uint32_t handle = ((receivedData[14] << 24) + (receivedData[15] << 16) + (receivedData[16] << 8) + receivedData[17]);
+                if (handle == 0)
+                    return nullptr;
+
+                std::uint8_t status = receivedData[18];
+                std::uint8_t paramCount = receivedData[19];
+
+                std::vector<std::uint8_t> parameterData;
+                if (parameterDataLength > 0)
+                {
+                    parameterData.reserve(parameterDataLength);
+                    for (std::uint32_t i = 0; i < parameterDataLength; i++)
+                    {
+                        parameterData.push_back(static_cast<std::uint8_t>(receivedData[20 + i]));
+                    }
+                }
+
+                return std::make_unique<Ocp1Response>(handle, status, paramCount, parameterData);
             }
 
         case KeepAlive:
@@ -357,6 +471,7 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
             return nullptr;
     }
 }
+
 
 
 //==============================================================================
@@ -384,6 +499,35 @@ std::vector<std::uint8_t> Ocp1CommandResponseRequired::GetSerializedData()
     serializedData.push_back(static_cast<std::uint8_t>(m_methodDefLevel));
     serializedData.push_back(static_cast<std::uint8_t>(m_methodIndex >> 8));
     serializedData.push_back(static_cast<std::uint8_t>(m_methodIndex));
+    serializedData.push_back(static_cast<std::uint8_t>(m_paramCount));
+    for (size_t i = 0; i < m_parameterData.size(); i++)
+    {
+        serializedData.push_back(m_parameterData[i]);
+    }
+
+    return serializedData;
+};
+
+
+
+//==============================================================================
+// Class Ocp1Response
+//==============================================================================
+
+std::vector<std::uint8_t> Ocp1Response::GetSerializedData()
+{
+    std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
+
+    std::uint32_t responseSize(m_header.GetMessageSize() - 9); // Message size minus the header
+    serializedData.push_back(static_cast<std::uint8_t>(responseSize >> 24));
+    serializedData.push_back(static_cast<std::uint8_t>(responseSize >> 16));
+    serializedData.push_back(static_cast<std::uint8_t>(responseSize >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(responseSize));
+    serializedData.push_back(static_cast<std::uint8_t>(m_handle >> 24));
+    serializedData.push_back(static_cast<std::uint8_t>(m_handle >> 16));
+    serializedData.push_back(static_cast<std::uint8_t>(m_handle >> 8));
+    serializedData.push_back(static_cast<std::uint8_t>(m_handle));
+    serializedData.push_back(static_cast<std::uint8_t>(m_status));
     serializedData.push_back(static_cast<std::uint8_t>(m_paramCount));
     for (size_t i = 0; i < m_parameterData.size(); i++)
     {

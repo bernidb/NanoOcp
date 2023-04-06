@@ -72,7 +72,6 @@ MainComponent::MainComponent()
         std::uint32_t handle;
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn_Off,
                                                                          handle).GetMemoryBlock());
-        m_powerD40LED->setToggleState(false, dontSendNotification);
     };
     addAndMakeVisible(m_powerOffD40Button.get());
 
@@ -83,7 +82,6 @@ MainComponent::MainComponent()
         std::uint32_t handle;
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn_On,
                                                                          handle).GetMemoryBlock());
-        m_powerD40LED->setToggleState(true, dontSendNotification);
     };
     addAndMakeVisible(m_powerOnD40Button.get());
     
@@ -112,35 +110,42 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
 {
     std::unique_ptr<NanoOcp1::Ocp1Message> msgObj = NanoOcp1::Ocp1Message::UnmarshalOcp1Message(message);
     if (msgObj)
-
-    switch (msgObj->GetMessageType())
     {
-        case NanoOcp1::Ocp1Message::Notification:
-            {
-                NanoOcp1::Ocp1Notification* notifObj = static_cast<NanoOcp1::Ocp1Notification*>(msgObj.get());
+        switch (msgObj->GetMessageType())
+        {
+            case NanoOcp1::Ocp1Message::Notification:
+                {
+                    NanoOcp1::Ocp1Notification* notifObj = static_cast<NanoOcp1::Ocp1Notification*>(msgObj.get());
 
-                // check ono, defLevel, propIdx
+                    // check ono, defLevel, propIdx
 
-                // Update GUI according to new value
-                std::uint16_t switchSetting = NanoOcp1::DataToUint16(notifObj->GetParameterData());
-                m_powerD40LED->setToggleState(switchSetting > 0, dontSendNotification);
+                    // Update GUI according to new value
+                    std::uint16_t switchSetting = NanoOcp1::DataToUint16(notifObj->GetParameterData());
+                    m_powerD40LED->setToggleState(switchSetting > 0, dontSendNotification);
 
-                return true;
-            }
-        case NanoOcp1::Ocp1Message::Response:
-            {
-                // TODO: check handle, use new value
+                    return true;
+                }
+            case NanoOcp1::Ocp1Message::Response:
+                {
+                    NanoOcp1::Ocp1Response* responseObj = static_cast<NanoOcp1::Ocp1Response*>(msgObj.get());
 
-                return true;
-            }
-        case NanoOcp1::Ocp1Message::KeepAlive:
-            {
-                // Reset online timer
+                    if (responseObj->GetResponseStatus() != 0)
+                    {
+                        DBG("Got an OCA response for handle " << juce::String(responseObj->GetResponseHandle()) << 
+                            " with status " << NanoOcp1::StatusToString(responseObj->GetResponseStatus()));
+                    }
 
-                return true;
-            }
-        default:
-            break;
+                    return true;
+                }
+            case NanoOcp1::Ocp1Message::KeepAlive:
+                {
+                    // Reset online timer
+
+                    return true;
+                }
+            default:
+                break;
+        }
     }
 
     return false;

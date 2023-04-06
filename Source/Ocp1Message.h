@@ -111,6 +111,15 @@ std::vector<std::uint8_t> DataFromFloat(std::float_t value);
  */
 std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono);
 
+/**
+ * Convinience method to convert an integer representing an OcaStatus to it's string representation.
+ *
+ * @param[in] status     Integer representing an OcaStatus.
+ * @return  The string representation of the OcaStatus.
+ */
+juce::String StatusToString(std::uint8_t status);
+
+
 
 /**
  * Representation of the header of a OCA message.
@@ -129,6 +138,11 @@ public:
             m_msgSize(CalculateMessageSize(msgType, parameterDataLength))
     {
     }
+
+    /**
+     * Class constructor which creates a Ocp1Header based on a juce::MemoryBlock.
+     */
+    Ocp1Header(const juce::MemoryBlock& memoryBlock);
 
     /**
      * Class destructor.
@@ -173,6 +187,11 @@ public:
      * @return  Size of the complete OCA message in bytes, excluding the initial sync bit.
      */
     static std::uint32_t CalculateMessageSize(std::uint8_t msgType, size_t parameterDataLength);
+
+    /**
+     * Size of an OCA message header, in bytes, including the starting sync byte.
+     */
+    static constexpr std::uint32_t Ocp1HeaderSize = 10;
 
 protected:
     std::uint8_t                m_syncVal;      // Always 0x3b
@@ -338,6 +357,75 @@ protected:
     std::uint32_t               m_targetOno;
     std::uint16_t               m_methodDefLevel;
     std::uint16_t               m_methodIndex;
+    std::uint8_t                m_paramCount;
+};
+
+
+/**
+ * Representation of an Oca Response message.
+ */
+class Ocp1Response : public Ocp1Message
+{
+public:
+    /**
+     * Class constructor.
+     */
+    Ocp1Response(std::uint32_t handle,
+                 std::uint8_t status,
+                 std::uint8_t paramCount,
+                 const std::vector<std::uint8_t>& parameterData)
+        : Ocp1Message(static_cast<std::uint8_t>(Response), parameterData),
+            m_handle(handle),
+            m_status(status),
+            m_paramCount(paramCount)
+    {
+    }
+
+    /**
+     * Class destructor.
+     */
+    ~Ocp1Response() override
+    {
+    }
+
+    /**
+     * Gets the handle of the OCA response.
+     *
+     * @return  Handle of OCA response.
+     */
+    std::uint32_t GetResponseHandle() const
+    {
+        return m_handle;
+    }
+
+    /**
+     * Gets the status of the OCA response. Use StatusToString for its string representation.
+     *
+     * @return  Status of the OCA response.
+     */
+    std::uint8_t GetResponseStatus() const
+    {
+        return m_status;
+    }
+
+    // Reimplemented from Ocp1Message
+
+    std::vector<std::uint8_t> GetSerializedData();
+
+protected:
+    /**
+     * Handle of the response. Should match the handle of a previously sent command.
+     */
+    std::uint32_t               m_handle;
+
+    /**
+     * Indicates whether the previously sent command was successful.
+     */
+    std::uint8_t                m_status;
+
+    /**
+     * Number of parameters contained in this response. Status doesn't count as a parameter.
+     */
     std::uint8_t                m_paramCount;
 };
 
