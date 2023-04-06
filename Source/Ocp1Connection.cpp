@@ -9,6 +9,7 @@
 */
 
 #include "Ocp1Connection.h"
+#include "Ocp1Message.h"
 
 
 namespace NanoOcp1
@@ -277,36 +278,37 @@ int Ocp1Connection::readData(void* data, int num)
 
 bool Ocp1Connection::readNextMessage()
 {
-    uint32 messageHeader[2];
-    auto bytes = readData(messageHeader, sizeof(messageHeader));
+    // Read enough data to fit an OCA header.
+    juce::MemoryBlock messageData((size_t)Ocp1Header::Ocp1HeaderSize);
+    auto bytes = readData(messageData.getData(), Ocp1Header::Ocp1HeaderSize);
 
-    if (bytes == (int)sizeof(messageHeader))
+    if (bytes == Ocp1Header::Ocp1HeaderSize)
     {
-        auto bytesInMessage = (int)ByteOrder::swapIfBigEndian(messageHeader[1]);
+        // Unmarshal the OCA header using a Ocp1Header helper object.
+        Ocp1Header tmpHeader(messageData);
 
-        if (bytesInMessage > 0)
+        // Resize the MemoryBlock to fit the complete OCA message.
+        // NOTE: msgSize does not include the sync byte.
+        messageData.setSize(static_cast<size_t>(tmpHeader.GetMessageSize()) + 1);
+
+        auto readPosition = static_cast<int>(Ocp1Header::Ocp1HeaderSize);
+        auto bytesLeft = static_cast<int>(tmpHeader.GetMessageSize() + 1 - Ocp1Header::Ocp1HeaderSize);
+        while (bytesLeft > 0)
         {
-            juce::MemoryBlock messageData((size_t)bytesInMessage, true);
-            int bytesRead = 0;
+            if (thread->threadShouldExit())
+                return false;
 
-            while (bytesInMessage > 0)
-            {
-                if (thread->threadShouldExit())
-                    return false;
+            auto numThisTime = jmin(bytesLeft, 65536);
+            auto bytesIn = readData(addBytesToPointer(messageData.getData(), readPosition), numThisTime);
 
-                auto numThisTime = jmin(bytesInMessage, 65536);
-                auto bytesIn = readData(addBytesToPointer(messageData.getData(), bytesRead), numThisTime);
+            if (bytesIn <= 0)
+                break;
 
-                if (bytesIn <= 0)
-                    break;
-
-                bytesRead += bytesIn;
-                bytesInMessage -= bytesIn;
-            }
-
-            if (bytesRead >= 0)
-                deliverDataInt(messageData);
+            readPosition += bytesIn;
+            bytesLeft -= bytesIn;
         }
+
+        deliverDataInt(messageData);
 
         return true;
     }
