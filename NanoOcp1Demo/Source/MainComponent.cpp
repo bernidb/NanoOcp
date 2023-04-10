@@ -44,11 +44,11 @@ MainComponent::MainComponent()
     {
         if (m_subscribeButton->getToggleState())
         {
+            auto channel = 1;
             std::uint32_t handle;
-            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn,
-                                                                             handle).GetMemoryBlock());
-            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Config_PotiLevel_ChA,
-                                                                             handle).GetMemoryBlock());
+            auto cmdDef = NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Config_PotiLevel;
+            cmdDef.parameterData = NanoOcp1::DataFromOnoForSubscription(GetONo(0x01, 0x00, channel, NanoOcp1::BoxAndObjNo::Config_PotiLevel)); // ONO of Config_PotiLevel Ch 1
+            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
         }
         else
         {
@@ -73,8 +73,9 @@ MainComponent::MainComponent()
     m_powerOffD40Button->onClick = [=]() 
     {
         std::uint32_t handle;
-        m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn_Off,
-                                                                         handle).GetMemoryBlock());
+        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn);
+        cmdDef.parameterData = NanoOcp1::DataFromUint16(static_cast<std::uint16_t>(0));
+        m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
     };
     addAndMakeVisible(m_powerOffD40Button.get());
 
@@ -83,8 +84,9 @@ MainComponent::MainComponent()
     m_powerOnD40Button->onClick = [=]() 
     {
         std::uint32_t handle;
-        m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn_On,
-                                                                         handle).GetMemoryBlock());
+        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn);
+        cmdDef.parameterData = NanoOcp1::DataFromUint16(static_cast<std::uint16_t>(1));
+        m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
     };
     addAndMakeVisible(m_powerOnD40Button.get());
 
@@ -94,8 +96,11 @@ MainComponent::MainComponent()
     m_gainSlider->setTextValueSuffix("dB");
     m_gainSlider->onValueChange = [=]()
     {
+        auto channel = 1;
+
         std::uint32_t handle;
-        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Config_PotiLevel_ChA);
+        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Config_PotiLevel);
+        cmdDef.targetOno = NanoOcp1::GetONo(1, 0, channel, NanoOcp1::BoxAndObjNo::Config_PotiLevel),
         cmdDef.parameterData = NanoOcp1::DataFromFloat(static_cast<std::float_t>(m_gainSlider->getValue()));
 
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
@@ -134,14 +139,16 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
                 {
                     NanoOcp1::Ocp1Notification* notifObj = static_cast<NanoOcp1::Ocp1Notification*>(msgObj.get());
 
+                    auto channel = 1;
+
                     // Update the right GUI element according to the definition of the object 
                     // which triggered the notification.
-                    if (notifObj->MatchesObject(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn_Off.targetOno))
+                    if (notifObj->MatchesObject(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn.targetOno))
                     {
                         std::uint16_t switchSetting = NanoOcp1::DataToUint16(notifObj->GetParameterData());
                         m_powerD40LED->setToggleState(switchSetting > 0, dontSendNotification);
                     }
-                    else if (notifObj->MatchesObject(NanoOcp1::dbOcaObjectDef_Dy_Config_PotiLevel_ChA.targetOno))
+                    else if (notifObj->MatchesObject(NanoOcp1::GetONo(1, 0, channel, NanoOcp1::BoxAndObjNo::Config_PotiLevel)))
                     {
                         std::float_t newGain = NanoOcp1::DataToFloat(notifObj->GetParameterData());
                         m_gainSlider->setValue(newGain, dontSendNotification);

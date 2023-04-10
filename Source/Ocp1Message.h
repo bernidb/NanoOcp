@@ -17,7 +17,7 @@ namespace NanoOcp1
 {
 
 /**
- * Convinience helper method to convert a byte vector into a Uint8
+ * Convenience helper method to convert a byte vector into a Uint8
  * 
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
  * @param[in] ok                Optional parameter to verify if the conversion was successful.
@@ -26,7 +26,7 @@ namespace NanoOcp1
 std::uint8_t DataToUint8(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
 
 /**
- * Convinience helper method to convert a Uint8 into a byte vector
+ * Convenience helper method to convert a Uint8 into a byte vector
  * 
  * @param[in] value     Value to be converted.
  * @return  The value as a byte vector.
@@ -34,7 +34,7 @@ std::uint8_t DataToUint8(const std::vector<std::uint8_t>& parameterData, bool* o
 std::vector<std::uint8_t> DataFromUint8(std::uint8_t value);
 
 /**
- * Convinience helper method to convert a byte vector into a Uint16
+ * Convenience helper method to convert a byte vector into a Uint16
  *
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
  * @param[in] ok                Optional parameter to verify if the conversion was successful.
@@ -43,7 +43,7 @@ std::vector<std::uint8_t> DataFromUint8(std::uint8_t value);
 std::uint16_t DataToUint16(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
 
 /**
- * Convinience helper method to convert a Uint16 into a byte vector
+ * Convenience helper method to convert a Uint16 into a byte vector
  *
  * @param[in] value     Value to be converted.
  * @return  The value as a byte vector.
@@ -51,7 +51,7 @@ std::uint16_t DataToUint16(const std::vector<std::uint8_t>& parameterData, bool*
 std::vector<std::uint8_t> DataFromUint16(std::uint16_t value);
 
 /**
- * Convinience helper method to convert a byte vector into a Uint32
+ * Convenience helper method to convert a byte vector into a Uint32
  *
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
  * @param[in] ok                Optional parameter to verify if the conversion was successful.
@@ -60,7 +60,7 @@ std::vector<std::uint8_t> DataFromUint16(std::uint16_t value);
 std::uint32_t DataToUint32(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
 
 /**
- * Convinience helper method to convert a Uint32 into a byte vector
+ * Convenience helper method to convert a Uint32 into a byte vector
  *
  * @param[in] value     Value to be converted.
  * @return  The value as a byte vector.
@@ -68,7 +68,7 @@ std::uint32_t DataToUint32(const std::vector<std::uint8_t>& parameterData, bool*
 std::vector<std::uint8_t> DataFromUint32(std::uint32_t value);
 
 /**
- * Convinience helper method to convert a byte vector into a juce::String
+ * Convenience helper method to convert a byte vector into a juce::String
  *
  * @param[in] parameterData     Vector of bytes containing the string to be converted.
  *                              Note that the first two bytes contain the string's length.
@@ -78,7 +78,7 @@ std::vector<std::uint8_t> DataFromUint32(std::uint32_t value);
 juce::String DataToString(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
 
 /**
- * Convinience helper method to convert a juce::String into a byte vector
+ * Convenience helper method to convert a juce::String into a byte vector
  *
  * @param[in] string     juce::String to be converted.
  * @return  The value as a byte vector.
@@ -86,7 +86,7 @@ juce::String DataToString(const std::vector<std::uint8_t>& parameterData, bool* 
 std::vector<std::uint8_t> DataFromString(const juce::String& string);
 
 /**
- * Convinience helper method to convert a byte vector into a 32-bit float.
+ * Convenience helper method to convert a byte vector into a 32-bit float.
  *
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
  * @param[in] ok                Optional parameter to verify if the conversion was successful.
@@ -95,7 +95,7 @@ std::vector<std::uint8_t> DataFromString(const juce::String& string);
 std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
 
 /**
- * Convinience helper method to convert a 32-bit float into a byte vector
+ * Convenience helper method to convert a 32-bit float into a byte vector
  *
  * @param[in] value     Value to be converted.
  * @return  The value as a byte vector.
@@ -103,7 +103,7 @@ std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* o
 std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue);
 
 /**
- * Convinience helper method to generate a byte vector containing the parameters
+ * Convenience helper method to generate a byte vector containing the parameters
  * necessary for an AddSubscription command for a given object.
  *
  * @param[in] ono     ONo of the object that the subscription shall be added for.
@@ -112,12 +112,37 @@ std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue);
 std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono);
 
 /**
- * Convinience method to convert an integer representing an OcaStatus to it's string representation.
+ * Convenience method to convert an integer representing an OcaStatus to it's string representation.
  *
  * @param[in] status     Integer representing an OcaStatus.
  * @return  The string representation of the OcaStatus.
  */
 juce::String StatusToString(std::uint8_t status);
+
+/**
+ * Convenience method to generate a unique target object number.
+ * This is the method to use when addressing regular amp objects.
+ *
+ * @param[in] type                  The object type.
+ * @param[in] record                The object record number value.
+ * @param[in] channel               The object channel number value.
+ * @param[in] boxAndObjectNumber    The aggregate box and target number.
+ * @return  The object ONo.
+ */
+std::uint32_t GetONo(std::uint32_t type, std::uint32_t record, std::uint32_t channel, std::uint32_t boxAndObjectNumber);
+
+/**
+ * Convenience method to generate a unique target object number.
+ * This is the method to use when addressing newer Matrix type object (to be confirmed).
+ *
+ * @param[in] type                  The object type.
+ * @param[in] record                The object record number value.
+ * @param[in] channel               The object channel number value.
+ * @param[in] boxNumber             The objects box number.
+ * @param[in] objectNumber          The objects target number.
+ * @return  The object ONo.
+ */
+std::uint32_t GetONoTy2(std::uint32_t type, std::uint32_t record, std::uint32_t channel, std::uint32_t boxNumber, std::uint32_t objectNumber);
 
 
 

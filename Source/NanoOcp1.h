@@ -44,10 +44,6 @@ public:
     std::function<void()> onConnectionEstablished;
     std::function<void()> onConnectionLost;
 
-    //==============================================================================
-    static std::uint32_t GetDBONo(std::uint32_t type, std::uint32_t record, std::uint32_t channel, std::uint32_t boxAndObjectNumber);
-    static std::uint32_t GetDBONo2(std::uint32_t type, std::uint32_t record, std::uint32_t channel, std::uint32_t boxNumber, std::uint32_t objectNumber);
-
 protected:
     //==============================================================================
     bool processReceivedData(const juce::MemoryBlock& data);

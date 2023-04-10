@@ -262,6 +262,22 @@ juce::String StatusToString(std::uint8_t status)
     return result;
 }
 
+std::uint32_t GetONo(std::uint32_t type, std::uint32_t record, std::uint32_t channel, std::uint32_t boxAndObjectNumber)
+{
+    return (std::uint32_t((type) & 0xF) << 28)
+        | (std::uint32_t((record) & 0xFF) << 20)
+        | (std::uint32_t((channel) & 0x1F) << 15)
+        | (std::uint32_t(boxAndObjectNumber) & 0x7FFF);
+}
+
+std::uint32_t GetONoTy2(std::uint32_t type, std::uint32_t record, std::uint32_t channel, std::uint32_t boxNumber, std::uint32_t objectNumber)
+{
+    return (std::uint32_t((type) & 0xF) << 28)
+        | (std::uint32_t((record) & 0xFF) << 20)
+        | (std::uint32_t((channel) & 0xFF) << 12)
+        | (std::uint32_t((boxNumber) & 0x1F) << 7)
+        | (std::uint32_t((objectNumber) & 0x7F));
+}
 
 
 //==============================================================================

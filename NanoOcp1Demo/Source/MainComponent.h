@@ -12,11 +12,11 @@
 
 #include <JuceHeader.h>
 
-#include "../../Source/NanoOcp1.h"
 
 namespace NanoOcp1
 {
-class NanoOcp1;
+    class NanoOcp1;
+    class NanoOcp1Client;
 }
 
 namespace NanoOcp1Demo
