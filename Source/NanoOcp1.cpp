@@ -90,6 +90,9 @@ bool NanoOcp1Client::stop()
 
 	disconnect();
 
+	if (onConnectionLost && !isConnected())
+		onConnectionLost();
+
 	return !isConnected();
 }
 
