@@ -73,7 +73,7 @@ MainComponent::MainComponent()
     m_powerOffD40Button->onClick = [=]() 
     {
         std::uint32_t handle;
-        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn);
+        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Set_Settings_PwrOn);
         cmdDef.parameterData = NanoOcp1::DataFromUint16(static_cast<std::uint16_t>(0));
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
     };
@@ -84,7 +84,7 @@ MainComponent::MainComponent()
     m_powerOnD40Button->onClick = [=]() 
     {
         std::uint32_t handle;
-        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn);
+        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Set_Settings_PwrOn);
         cmdDef.parameterData = NanoOcp1::DataFromUint16(static_cast<std::uint16_t>(1));
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
     };
@@ -99,7 +99,7 @@ MainComponent::MainComponent()
         auto channel = 1;
 
         std::uint32_t handle;
-        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Config_PotiLevel);
+        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Set_Config_PotiLevel);
         cmdDef.targetOno = NanoOcp1::GetONo(1, 0, channel, NanoOcp1::BoxAndObjNo::Config_PotiLevel),
         cmdDef.parameterData = NanoOcp1::DataFromFloat(static_cast<std::float_t>(m_gainSlider->getValue()));
 
@@ -143,7 +143,7 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
 
                     // Update the right GUI element according to the definition of the object 
                     // which triggered the notification.
-                    if (notifObj->MatchesObject(NanoOcp1::dbOcaObjectDef_Dy_Settings_PwrOn.targetOno))
+                    if (notifObj->MatchesObject(NanoOcp1::GetONo(1, 0, 0, NanoOcp1::BoxAndObjNo::Settings_PwrOn)))
                     {
                         std::uint16_t switchSetting = NanoOcp1::DataToUint16(notifObj->GetParameterData());
                         m_powerD40LED->setToggleState(switchSetting > 0, dontSendNotification);

@@ -276,7 +276,7 @@ public:
      *
      * @return  A vector containing the OCA message including header.
      */
-    std::vector<std::uint8_t> GetParameterData()
+    std::vector<std::uint8_t> GetParameterData() const
     {
         return m_parameterData;
     }
