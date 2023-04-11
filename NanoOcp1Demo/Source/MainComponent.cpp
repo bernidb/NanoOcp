@@ -23,6 +23,10 @@ MainComponent::MainComponent()
     auto address = juce::String("127.0.0.1");
     auto port = 50014;
 
+    // Create definitions to act as event handlers for the supported objects.
+    m_pwrOnObjDef = std::make_unique<NanoOcp1::dbOcaObjectDef_Dy_Get_Settings_PwrOn>();
+    m_potiLevelObjDef = std::make_unique<NanoOcp1::dbOcaObjectDef_Dy_Get_Config_PotiLevel>(1);
+
     // Editor to allow user input for ip address and port to use to connect
     m_ipAndPortEditor = std::make_unique<TextEditor>();
     m_ipAndPortEditor->setTextToShowWhenEmpty(address + ";" + juce::String(port), getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId).darker().darker());
@@ -44,7 +48,7 @@ MainComponent::MainComponent()
     {
         if (m_subscribeButton->getToggleState())
         {
-            // Add subscriptions
+            // Send AddSubscription requests
             std::uint32_t handle;
             m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(
                 NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Config_PotiLevel(1), handle).GetMemoryBlock());
@@ -52,10 +56,10 @@ MainComponent::MainComponent()
                 NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn(), handle).GetMemoryBlock());
 
             // Get initial values
-            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(
-                NanoOcp1::dbOcaObjectDef_Dy_Get_Settings_PwrOn(), handle).GetMemoryBlock());
-            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(
-                NanoOcp1::dbOcaObjectDef_Dy_Get_Config_PotiLevel(1), handle).GetMemoryBlock());
+            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(*m_pwrOnObjDef.get(), handle).GetMemoryBlock());
+            m_ocaHandleMap.emplace(handle, m_pwrOnObjDef.get());
+            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(*m_potiLevelObjDef.get(), handle).GetMemoryBlock());
+            m_ocaHandleMap.emplace(handle, m_potiLevelObjDef.get());
         }
         else
         {
@@ -139,16 +143,14 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
                 {
                     NanoOcp1::Ocp1Notification* notifObj = static_cast<NanoOcp1::Ocp1Notification*>(msgObj.get());
 
-                    auto channel = 1;
-
                     // Update the right GUI element according to the definition of the object 
                     // which triggered the notification.
-                    if (notifObj->MatchesObject(NanoOcp1::GetONo(1, 0, 0, NanoOcp1::BoxAndObjNo::Settings_PwrOn)))
+                    if (notifObj->MatchesObject(m_pwrOnObjDef.get()))
                     {
                         std::uint16_t switchSetting = NanoOcp1::DataToUint16(notifObj->GetParameterData());
                         m_powerD40LED->setToggleState(switchSetting > 0, dontSendNotification);
                     }
-                    else if (notifObj->MatchesObject(NanoOcp1::GetONo(1, 0, channel, NanoOcp1::BoxAndObjNo::Config_PotiLevel)))
+                    else if (notifObj->MatchesObject(m_potiLevelObjDef.get()))
                     {
                         std::float_t newGain = NanoOcp1::DataToFloat(notifObj->GetParameterData());
                         m_gainSlider->setValue(newGain, dontSendNotification);
@@ -165,8 +167,30 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
                         DBG("Got an OCA response for handle " << juce::String(responseObj->GetResponseHandle()) << 
                             " with status " << NanoOcp1::StatusToString(responseObj->GetResponseStatus()));
                     }
+                    else
+                    {
+                        // Get the objDef matching the obtained response handle.
+                        const auto iter = m_ocaHandleMap.find(responseObj->GetResponseHandle());
+                        if (iter != m_ocaHandleMap.end())
+                        {
+                            // Update the right GUI element according to the definition of the object 
+                            // which triggered the response.
+                            NanoOcp1::Ocp1CommandDefinition* objDef = iter->second;
+                            if (objDef == m_pwrOnObjDef.get())
+                            {
+                                std::uint16_t switchSetting = NanoOcp1::DataToUint16(responseObj->GetParameterData());
+                                m_powerD40LED->setToggleState(switchSetting > 0, dontSendNotification);
+                            }
+                            else if (objDef == m_potiLevelObjDef.get())
+                            {
+                                std::float_t newGain = NanoOcp1::DataToFloat(responseObj->GetParameterData());
+                                m_gainSlider->setValue(newGain, dontSendNotification);
+                            }
 
-                    // TODO: handle responses to GET commands!
+                            // Finally remove handle from the list, as it has been processed.
+                            m_ocaHandleMap.erase(iter);
+                        }
+                    }
 
                     return true;
                 }

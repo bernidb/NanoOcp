@@ -147,6 +147,42 @@ std::uint32_t GetONoTy2(std::uint32_t type, std::uint32_t record, std::uint32_t 
 
 
 /**
+ * Helper struct to encapsulate parameters for OCA Commands, Responses and Notifications.
+ */
+struct Ocp1CommandDefinition
+{
+    /**
+     * Standard struct constructor.
+     */
+    Ocp1CommandDefinition()
+    {
+    }
+
+    /**
+     * Parameterized struct constructor.
+     */
+    Ocp1CommandDefinition(std::uint32_t targetOno,
+                          std::uint16_t methodDefLevel,
+                          std::uint16_t methodIndex,
+                          std::uint8_t paramCount,
+                          const std::vector<std::uint8_t>& parameterData)
+        :   m_targetOno(targetOno),
+            m_methodDefLevel(methodDefLevel),
+            m_methodIndex(methodIndex),
+            m_paramCount(paramCount),
+            m_parameterData(parameterData)
+    {
+    }
+
+    std::uint32_t m_targetOno;
+    std::uint16_t m_methodDefLevel;
+    std::uint16_t m_methodIndex;
+    std::uint8_t m_paramCount;
+    std::vector<std::uint8_t> m_parameterData;
+};
+
+
+/**
  * Representation of the header of a OCA message.
  */
 class Ocp1Header
@@ -316,37 +352,6 @@ protected:
 
 
 /**
- * Helper struct to encapsulate paraeters for a OCA CommandResponseRequired message.
- */
-struct Ocp1CommandParameters
-{
-    std::uint32_t targetOno;
-    std::uint16_t methodDefLevel;
-    std::uint16_t methodIndex;
-    std::uint8_t paramCount;
-    std::vector<std::uint8_t> parameterData;
-
-    Ocp1CommandParameters()
-    {
-    }
-
-    Ocp1CommandParameters(std::uint32_t to,
-                          std::uint16_t mdl,
-                          std::uint16_t mi,
-                          std::uint8_t pc,
-                          const std::vector<std::uint8_t>& pd)
-        :   targetOno(to),
-            methodDefLevel(mdl),
-            methodIndex(mi),
-            paramCount(pc),
-            parameterData(pd)
-    {
-
-    }
-};
-
-
-/**
  * Representation of an OCA CommandResponseRequired message.
  */
 class Ocp1CommandResponseRequired : public Ocp1Message
@@ -374,12 +379,12 @@ public:
     }
 
     /**
-     * Class constructor that takes parameters via a Ocp1CommandParameters struct.
+     * Class constructor that takes parameters via a Ocp1CommandDefinition struct.
      */
-    Ocp1CommandResponseRequired(const Ocp1CommandParameters& params,
+    Ocp1CommandResponseRequired(const Ocp1CommandDefinition& def,
                                 std::uint32_t& handle)
-        : Ocp1CommandResponseRequired(params.targetOno, params.methodDefLevel, params.methodIndex, 
-                                      params.paramCount, params.parameterData, handle)
+        : Ocp1CommandResponseRequired(def.m_targetOno, def.m_methodDefLevel, def.m_methodIndex,
+                                      def.m_paramCount, def.m_parameterData, handle)
     {
     }
 
@@ -506,12 +511,11 @@ public:
      * @param[in] TODO
      * @return  True if this notification was triggered by the given object.
      */
-    bool MatchesObject(std::uint32_t emitterOno/*, 
-                       std::uint16_t emitterPropertyDefLevel,
-                       std::uint16_t emitterPropertyIndex*/) const
+    bool MatchesObject(const Ocp1CommandDefinition* def) const
     {
-        // TODO compare defLevel and index 
-        return (emitterOno == m_emitterOno);
+        return ((def->m_targetOno == m_emitterOno) && 
+                (def->m_methodDefLevel == m_emitterPropertyDefLevel) && 
+                (def->m_methodIndex == m_emitterPropertyIndex));
     }
 
     // Reimplemented from Ocp1Message
