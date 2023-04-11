@@ -325,6 +325,24 @@ struct Ocp1CommandParameters
     std::uint16_t methodIndex;
     std::uint8_t paramCount;
     std::vector<std::uint8_t> parameterData;
+
+    Ocp1CommandParameters()
+    {
+    }
+
+    Ocp1CommandParameters(std::uint32_t to,
+                          std::uint16_t mdl,
+                          std::uint16_t mi,
+                          std::uint8_t pc,
+                          const std::vector<std::uint8_t>& pd)
+        :   targetOno(to),
+            methodDefLevel(mdl),
+            methodIndex(mi),
+            paramCount(pc),
+            parameterData(pd)
+    {
+
+    }
 };
 
 

@@ -28,31 +28,40 @@ enum BoxAndObjNo
     Config_PotiLevel    = 0x206,
 };
 
-Ocp1CommandParameters dbOcaObjectDef_Dy_Set_Settings_PwrOn
+struct dbOcaObjectDef_Dy_Set_Settings_PwrOn : Ocp1CommandParameters
 {
-    GetONo(0x01, 0x00, 0x00, BoxAndObjNo::Settings_PwrOn),   // 0x10000100 ONO of Settings_PwrOn
-    4,                                 // OcaSwitch level
-    2,                                 // SetPosition method
-    1,                                 // 1 Param
-    std::vector<std::uint8_t>()        // Property value needs to be set outside this struct definition.
+    dbOcaObjectDef_Dy_Set_Settings_PwrOn(std::uint16_t setting) // 1 == ON; 0 == OFF
+        : Ocp1CommandParameters(GetONo(0x01, 0x00, 0x00, BoxAndObjNo::Settings_PwrOn), // ONO of Settings_PwrOn
+                                4,                              // OcaSwitch level
+                                2,                              // SetPosition method
+                                1,                              // 1 Param
+                                DataFromUint16(setting))        // Setting parameter
+    {
+    }
 };
 
-Ocp1CommandParameters dbOcaObjectDef_Dy_Get_Settings_PwrOn
+struct dbOcaObjectDef_Dy_Get_Settings_PwrOn : Ocp1CommandParameters
 {
-    GetONo(0x01, 0x00, 0x00, BoxAndObjNo::Settings_PwrOn),   // 0x10000100 ONO of Settings_PwrOn
-    4,                                 // OcaSwitch level
-    1,                                 // GetPosition method
-    0,                                 // 0 Param
-    std::vector<std::uint8_t>()        // Property value needs to be set outside this struct definition.
+    dbOcaObjectDef_Dy_Get_Settings_PwrOn()
+        : Ocp1CommandParameters(GetONo(0x01, 0x00, 0x00, BoxAndObjNo::Settings_PwrOn),   // ONO of Settings_PwrOn
+                                4,                              // OcaSwitch level
+                                1,                              // GetPosition method
+                                0,                              // 0 Param
+                                std::vector<std::uint8_t>())    // Empty parameters
+    {
+    }
 };
 
-Ocp1CommandParameters dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn
+struct dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn : Ocp1CommandParameters
 {
-    0x00000004,         // ONO of OcaSubscriptionManager
-    3,                  // OcaSubscriptionManager level
-    1,                  // AddSubscription method
-    5,                  // 5 Params 
-    DataFromOnoForSubscription(GetONo(0x01, 0x00, 0x00, BoxAndObjNo::Settings_PwrOn)) // 0x10000100 ONO of Settings_PwrOn
+    dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn()
+        : Ocp1CommandParameters(0x00000004,                     // ONO of OcaSubscriptionManager
+                                3,                              // OcaSubscriptionManager level
+                                1,                              // AddSubscription method
+                                5,                              // 5 Params 
+                                DataFromOnoForSubscription(GetONo(0x01, 0x00, 0x00, BoxAndObjNo::Settings_PwrOn))) // ONO of Settings_PwrOn
+    {
+    }
 };
 
 //Ocp1CommandParameters dbOcaObjectDef_Dy_RemoveSubscription_Settings_PwrOn
@@ -64,58 +73,76 @@ Ocp1CommandParameters dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn
 //    DataFromOnoForSubscription(GetONo(0x01, 0x00, 0x00, BoxAndObjNo::Settings_PwrOn)) // 0x10000100 ONO of Settings_PwrOn
 //};
 
-Ocp1CommandParameters dbOcaObjectDef_Dy_Set_Config_PotiLevel
+struct dbOcaObjectDef_Dy_Set_Config_PotiLevel : Ocp1CommandParameters
 {
-    std::uint32_t(),    // ONO of Config_PotiLevel needs to be set outside this struct definition.
-    4,                  // OcaGain level
-    2,                  // SetGain method
-    1,                  // 1 Param
-    std::vector<std::uint8_t>()  // Property value needs to be set outside this struct definition.
+    dbOcaObjectDef_Dy_Set_Config_PotiLevel(std::uint32_t channel, std::float_t value)
+        : Ocp1CommandParameters(GetONo(0x01, 0x00, channel, BoxAndObjNo::Config_PotiLevel), // ONO of Config_PotiLevel
+                                4,                              // OcaGain level
+                                2,                              // SetGain method
+                                1,                              // 1 Param
+                                DataFromFloat(value))           // Gain parameter
+    {
+    }
 };
 
-Ocp1CommandParameters dbOcaObjectDef_Dy_Get_Config_PotiLevel
+struct dbOcaObjectDef_Dy_Get_Config_PotiLevel : Ocp1CommandParameters
 {
-    std::uint32_t(),    // ONO of Config_PotiLevel needs to be set outside this struct definition.
-    4,                  // OcaGain level
-    1,                  // GetGain method
-    0,                  // 0 Param
-    std::vector<std::uint8_t>()  // Property value needs to be set outside this struct definition.
+    dbOcaObjectDef_Dy_Get_Config_PotiLevel(std::uint32_t channel)
+        : Ocp1CommandParameters(GetONo(0x01, 0x00, channel, BoxAndObjNo::Config_PotiLevel), // ONO of Config_PotiLevel
+                                4,                              // OcaGain level
+                                1,                              // GetGain method
+                                0,                              // 0 Param
+                                std::vector<std::uint8_t>())    // Empty parameters
+    {
+    }
 };
 
-Ocp1CommandParameters dbOcaObjectDef_Dy_AddSubscription_Config_PotiLevel
+struct dbOcaObjectDef_Dy_AddSubscription_Config_PotiLevel : Ocp1CommandParameters
 {
-    0x00000004,         // ONO of OcaSubscriptionManager
-    3,                  // OcaSubscriptionManager level
-    1,                  // AddSubscription method
-    5,                  // 5 Params 
-    std::vector<std::uint8_t>()  // Property value needs to be set outside this struct definition.
+    dbOcaObjectDef_Dy_AddSubscription_Config_PotiLevel(std::uint32_t channel)
+        : Ocp1CommandParameters(0x00000004,                     // ONO of OcaSubscriptionManager
+                                3,                              // OcaSubscriptionManager level
+                                1,                              // AddSubscription method
+                                5,                              // 5 Params 
+                                DataFromOnoForSubscription(GetONo(0x01, 0x00, channel, BoxAndObjNo::Config_PotiLevel))) // ONO of Config_PotiLevel
+    {
+    }
 };
 
-Ocp1CommandParameters dbOcaObjectDef_Dy_Set_Config_Mute
+struct dbOcaObjectDef_Dy_Set_Config_Mute : Ocp1CommandParameters
 {
-    std::uint32_t(),    // ONO of Config_Mute needs to be set outside this struct definition.
-    4,                  // OcaMute level
-    2,                  // SetState method
-    1,                  // 1 Param
-    std::vector<std::uint8_t>()  // Property value needs to be set outside this struct definition.
+    dbOcaObjectDef_Dy_Set_Config_Mute(std::uint32_t channel, std::uint16_t setting)
+        : Ocp1CommandParameters(GetONo(0x01, 0x00, channel, BoxAndObjNo::Config_Mute), // ONO of Config_Mute
+                                4,                              // OcaMute level
+                                2,                              // SetState method
+                                1,                              // 1 Param
+                                DataFromUint16(setting))        // Setting parameter
+    {
+    }
 };
 
-Ocp1CommandParameters dbOcaObjectDef_Dy_Get_Config_Mute
+struct dbOcaObjectDef_Dy_Get_Config_Mute : Ocp1CommandParameters
 {
-    std::uint32_t(),    // ONO of Config_Mute needs to be set outside this struct definition.
-    4,                  // OcaMute level
-    1,                  // GetState method
-    0,                  // 0 Param
-    std::vector<std::uint8_t>()  // Property value needs to be set outside this struct definition.
+    dbOcaObjectDef_Dy_Get_Config_Mute(std::uint32_t channel)
+        : Ocp1CommandParameters(GetONo(0x01, 0x00, channel, BoxAndObjNo::Config_Mute), // ONO of Config_Mute
+                                4,                              // OcaMute level
+                                1,                              // GetState method
+                                0,                              // 0 Param
+                                std::vector<std::uint8_t>())    // Empty parameters
+    {
+    }
 };
 
-Ocp1CommandParameters dbOcaObjectDef_Dy_AddSubscription_Config_Mute
+struct dbOcaObjectDef_Dy_AddSubscription_Config_Mute: Ocp1CommandParameters
 {
-    0x00000004,         // ONO of OcaSubscriptionManager
-    3,                  // OcaSubscriptionManager level
-    1,                  // AddSubscription method
-    5,                  // 5 Params 
-    std::vector<std::uint8_t>()  // Property value needs to be set outside this struct definition.
+    dbOcaObjectDef_Dy_AddSubscription_Config_Mute(std::uint32_t channel)
+        : Ocp1CommandParameters(0x00000004,                     // ONO of OcaSubscriptionManager
+                                3,                              // OcaSubscriptionManager level
+                                1,                              // AddSubscription method
+                                5,                              // 5 Params 
+                                DataFromOnoForSubscription(GetONo(0x01, 0x00, channel, BoxAndObjNo::Config_Mute))) // ONO of Config_Mute
+    {
+    }
 };
 
 
