@@ -17,6 +17,7 @@ namespace NanoOcp1
 {
     class NanoOcp1;
     class NanoOcp1Client;
+    struct Ocp1CommandDefinition;
 }
 
 namespace NanoOcp1Demo
@@ -46,7 +47,11 @@ public:
 private:
     //==============================================================================
     std::unique_ptr<NanoOcp1::NanoOcp1Client>   m_nanoOcp1Client;
-    
+
+    std::unique_ptr<NanoOcp1::Ocp1CommandDefinition>   m_pwrOnObjDef;
+    std::unique_ptr<NanoOcp1::Ocp1CommandDefinition>   m_potiLevelObjDef;
+    std::map<std::uint32_t, NanoOcp1::Ocp1CommandDefinition*> m_ocaHandleMap;
+
     //==============================================================================
     std::unique_ptr<TextEditor>     m_ipAndPortEditor;
     std::unique_ptr<TextButton>     m_connectedLED;
