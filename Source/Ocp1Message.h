@@ -120,6 +120,15 @@ std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono);
 juce::String StatusToString(std::uint8_t status);
 
 /**
+ * Convenience method to convert an integer representing an OCA Response handle to it's string representation.
+ * It will return juce::String(handle) most of the time, except in cases OCA_INVALID_SESSIONID and OCA_LOCAL_SESSIONID.
+ *
+ * @param[in] handle     OCA Response handle.
+ * @return  The string representation of the handle.
+ */
+juce::String HandleToString(std::uint32_t handle);
+
+/**
  * Convenience method to generate a unique target object number.
  * This is the method to use when addressing regular amp objects.
  *
@@ -456,6 +465,16 @@ public:
         return m_status;
     }
 
+    /**
+     * Gets the number of parameters contained in this response. Status doesn't count as a parameter.
+     *
+     * @return  Number of parameters contained in this response. 
+     */
+    std::uint8_t GetParamCount() const
+    {
+        return m_paramCount;
+    }
+
     // Reimplemented from Ocp1Message
 
     std::vector<std::uint8_t> GetSerializedData();
@@ -496,6 +515,16 @@ public:
             m_emitterPropertyDefLevel(emitterPropertyDefLevel),
             m_emitterPropertyIndex(emitterPropertyIndex)
     {
+    }
+
+    /**
+     * Get the ONo of the object whose property changed, triggering this notification.
+     * 
+     * @return  The emitter object's ONo.
+     */
+    std::uint32_t GetEmitterOno() const
+    {
+        return m_emitterOno;
     }
 
     /**

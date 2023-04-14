@@ -264,6 +264,26 @@ juce::String StatusToString(std::uint8_t status)
     return result;
 }
 
+juce::String HandleToString(std::uint32_t handle)
+{
+    juce::String result;
+
+    switch (handle)
+    {
+        case 0: // OCA_INVALID_SESSIONID
+            result = juce::String("InvalidSessionID");
+            break;
+        case 1: // OCA_LOCAL_SESSIONID
+            result = juce::String("LocalSessionID");
+            break;
+        default: 
+            result = juce::String(handle);
+            break;
+    }
+
+    return result;
+}
+
 std::uint32_t GetONo(std::uint32_t type, std::uint32_t record, std::uint32_t channel, std::uint32_t boxAndObjectNumber)
 {
     return (std::uint32_t((type) & 0xF) << 28)
@@ -364,7 +384,8 @@ std::uint32_t Ocp1Header::CalculateMessageSize(std::uint8_t msgType, size_t para
 // Class Ocp1Message
 //==============================================================================
 
-std::uint32_t Ocp1Message::m_nextHandle = 1;
+// OCA_INVALID_SESSIONID  == 0, OCA_LOCAL_SESSIONID == 1
+std::uint32_t Ocp1Message::m_nextHandle = 2;
 
 std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::MemoryBlock& receivedData)
 {
