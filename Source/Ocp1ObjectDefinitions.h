@@ -116,12 +116,12 @@ struct dbOcaObjectDef_Dy_AddSubscription_Config_PotiLevel : Ocp1CommandDefinitio
 
 struct dbOcaObjectDef_Dy_Set_Config_Mute : Ocp1CommandDefinition
 {
-    dbOcaObjectDef_Dy_Set_Config_Mute(std::uint32_t channel, std::uint16_t setting)
+    dbOcaObjectDef_Dy_Set_Config_Mute(std::uint32_t channel, std::uint8_t setting) // setting 1 == MUTE; 2 == UNMUTE
         : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, Config_Mute), // ONO of Config_Mute
             4,                              // OcaMute level
             2,                              // SetMute method
             1,                              // 1 Param
-            DataFromUint16(setting))        // Mute parameter
+            DataFromUint8(setting))         // Mute parameter
     {
     }
 };
