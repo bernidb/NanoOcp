@@ -477,7 +477,7 @@ public:
 
     // Reimplemented from Ocp1Message
 
-    std::vector<std::uint8_t> GetSerializedData();
+    std::vector<std::uint8_t> GetSerializedData() override;
 
 protected:
     /**
@@ -549,7 +549,7 @@ public:
 
     // Reimplemented from Ocp1Message
 
-    std::vector<std::uint8_t> GetSerializedData();
+    std::vector<std::uint8_t> GetSerializedData() override;
 
 protected:
     std::uint32_t               m_emitterOno;               // TODO
@@ -583,7 +583,7 @@ public:
 
     // Reimplemented from Ocp1Message
 
-    std::vector<std::uint8_t> GetSerializedData();
+    std::vector<std::uint8_t> GetSerializedData() override;
 
 protected:
     std::uint16_t               m_heartBeat;    // Heartbeat time in seconds, typically 5
