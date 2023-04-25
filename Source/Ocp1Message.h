@@ -154,6 +154,31 @@ std::uint32_t GetONo(std::uint32_t type, std::uint32_t record, std::uint32_t cha
 std::uint32_t GetONoTy2(std::uint32_t type, std::uint32_t record, std::uint32_t channel, std::uint32_t boxNumber, std::uint32_t objectNumber);
 
 
+/** 
+ * Enumeration that describes all available base data types. 
+ * Same values as OcaBaseDataType in OcaBaseDataTypes.h
+ */
+enum Ocp1DataType
+{
+    OCP1DATATYPE_NONE               = 0,
+    OCP1DATATYPE_BOOLEAN            = 1,
+    OCP1DATATYPE_INT8               = 2,
+    OCP1DATATYPE_INT16              = 3,
+    OCP1DATATYPE_INT32              = 4,
+    OCP1DATATYPE_INT64              = 5,
+    OCP1DATATYPE_UINT8              = 6,
+    OCP1DATATYPE_UINT16             = 7,
+    OCP1DATATYPE_UINT32             = 8,
+    OCP1DATATYPE_UINT64             = 9,
+    OCP1DATATYPE_FLOAT32            = 10,
+    OCP1DATATYPE_FLOAT64            = 11,
+    OCP1DATATYPE_STRING             = 12,
+    OCP1DATATYPE_BIT_STRING         = 13,
+    OCP1DATATYPE_BLOB               = 14,
+    OCP1DATATYPE_BLOB_FIXED_LEN     = 15,
+    OCP1DATATYPE_CUSTOM             = 128 // User-defined types
+};
+
 
 /**
  * Helper struct to encapsulate parameters for OCA Commands, Responses and Notifications.
@@ -171,20 +196,76 @@ struct Ocp1CommandDefinition
      * Parameterized struct constructor.
      */
     Ocp1CommandDefinition(std::uint32_t targetOno,
-                          std::uint16_t methodDefLevel,
-                          std::uint16_t methodIndex,
-                          std::uint8_t paramCount,
-                          const std::vector<std::uint8_t>& parameterData)
+                          std::uint16_t propertyType,
+                          std::uint16_t propertyDefLevel,
+                          std::uint16_t methodIndex = static_cast<std::uint16_t>(0),
+                          std::uint8_t paramCount = static_cast<std::uint8_t>(0),
+                          const std::vector<std::uint8_t>& parameterData = std::vector<std::uint8_t>())
         :   m_targetOno(targetOno),
-            m_methodDefLevel(methodDefLevel),
+            m_propertyType(propertyType),
+            m_propertyDefLevel(propertyDefLevel),
             m_methodIndex(methodIndex),
             m_paramCount(paramCount),
             m_parameterData(parameterData)
     {
     }
 
+    /**
+     * Struct destructor.
+     */
+    virtual ~Ocp1CommandDefinition()
+    {
+    }
+
+    /**
+     * Generates a Ocp1CommandDefinition for a typical AddSubscription command.
+     * Can be overriden for custom object AddSubscription commands.
+     * 
+     * @return An AddSubscription command definition.
+     */
+    virtual Ocp1CommandDefinition AddSubscriptionCommand() const;
+
+    /**
+     * Generates a Ocp1CommandDefinition for a typical GetValue command.
+     * Can be overriden for custom object GetValue commands.
+     * 
+     * @return A GetValue command definition.
+     */
+    virtual Ocp1CommandDefinition GetValueCommand() const;
+
+    /**
+     * Generates a Ocp1CommandDefinition for a typical SetValue command.
+     * Can be overriden for custom object SetValue commands.
+     * 
+     * @return A SetValue command definition.
+     */
+    virtual Ocp1CommandDefinition SetValueCommand(const juce::var& newValue) const;
+
+    /**
+     * Convert the parameter data obtained by i.e. an OCA Notification message to the correct
+     * data type depending on this Ocp1CommandDefinition's type.
+     * The resulting value will be returned as a variant juce::var.
+     * For example, a command definition for an OcaGain object will convert the provided byte array to a float value.
+     * 
+     * @param[in] paramCount    Number of parameters inside parameterData. Usually 1.
+     * @param[in] parameterData Byte array provided by an OCA Notification or Response message.
+     * @return    The value contained in parameterData, converted to the type corresponding to 
+     *            this Ocp1CommandDefinition, and packed into a juce::var.
+     */
+    virtual juce::var ToVariant(std::uint8_t paramCount, const std::vector<std::uint8_t>& parameterData);
+
+    /**
+     * Clone this object. To prevent slicing, this method must be overriden whenever new members or methods
+     * are added to a subclass. 
+     * 
+     * @return A unique_ptr of y copy of this object.
+     */
+    virtual std::unique_ptr<Ocp1CommandDefinition> Clone() const;
+
+
     std::uint32_t m_targetOno;
-    std::uint16_t m_methodDefLevel;
+    std::uint16_t m_propertyType;
+    std::uint16_t m_propertyDefLevel;
     std::uint16_t m_methodIndex;
     std::uint8_t m_paramCount;
     std::vector<std::uint8_t> m_parameterData;
@@ -392,7 +473,7 @@ public:
      */
     Ocp1CommandResponseRequired(const Ocp1CommandDefinition& def,
                                 std::uint32_t& handle)
-        : Ocp1CommandResponseRequired(def.m_targetOno, def.m_methodDefLevel, def.m_methodIndex,
+        : Ocp1CommandResponseRequired(def.m_targetOno, def.m_propertyDefLevel, def.m_methodIndex,
                                       def.m_paramCount, def.m_parameterData, handle)
     {
     }
@@ -543,8 +624,8 @@ public:
     bool MatchesObject(const Ocp1CommandDefinition* def) const
     {
         return ((def->m_targetOno == m_emitterOno) && 
-                (def->m_methodDefLevel == m_emitterPropertyDefLevel) && 
-                (def->m_methodIndex == m_emitterPropertyIndex));
+                (def->m_propertyDefLevel == m_emitterPropertyDefLevel) /*&&
+                (def->m_methodIndex == m_emitterPropertyIndex)*/);
     }
 
     // Reimplemented from Ocp1Message

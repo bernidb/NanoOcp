@@ -109,7 +109,7 @@ juce::String DataToString(const std::vector<std::uint8_t>& parameterData, bool* 
     return ret;
 }
 
-std::vector<std::uint8_t> DataFromString(juce::String string)
+std::vector<std::uint8_t> DataFromString(const juce::String& string)
 {
     std::vector<std::uint8_t> ret;
 
@@ -299,6 +299,134 @@ std::uint32_t GetONoTy2(std::uint32_t type, std::uint32_t record, std::uint32_t 
         | (std::uint32_t((channel) & 0xFF) << 12)
         | (std::uint32_t((boxNumber) & 0x1F) << 7)
         | (std::uint32_t((objectNumber) & 0x7F));
+}
+
+
+//==============================================================================
+// Class Ocp1CommandDefinition
+//==============================================================================
+Ocp1CommandDefinition Ocp1CommandDefinition::AddSubscriptionCommand() const
+{
+    return Ocp1CommandDefinition(0x00000004,                     // ONO of OcaSubscriptionManager
+                                 m_propertyType,
+                                 3,                              // OcaSubscriptionManager level
+                                 1,                              // AddSubscription method
+                                 5,                              // 5 Params 
+                                 DataFromOnoForSubscription(m_targetOno));
+}
+
+Ocp1CommandDefinition Ocp1CommandDefinition::GetValueCommand() const
+{
+    return Ocp1CommandDefinition(m_targetOno,
+                                 m_propertyType,
+                                 m_propertyDefLevel,
+                                 1,                              // Get method is usually MethodIdx 1
+                                 0,                              // 0 Param
+                                 std::vector<std::uint8_t>());   // Empty parameters
+}
+
+Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const juce::var& newValue) const
+{
+    std::uint8_t paramCount(0);
+    std::vector<std::uint8_t> newParamData;
+
+    switch (m_propertyType) // See enum Ocp1DataType
+    {
+        case OCP1DATATYPE_UINT8:
+            paramCount = 1;
+            newParamData = DataFromUint8(static_cast<std::uint8_t>(int(newValue)));
+            break;
+        case OCP1DATATYPE_UINT16:
+            paramCount = 1;
+            newParamData = DataFromUint16(static_cast<std::uint16_t>(int(newValue)));
+            break;
+        case OCP1DATATYPE_UINT32:
+            paramCount = 1;
+            newParamData = DataFromUint32(static_cast<std::uint32_t>(int(newValue)));
+            break;
+        case OCP1DATATYPE_FLOAT32:
+            paramCount = 1;
+            newParamData = DataFromFloat(float(newValue));
+            break;
+        case OCP1DATATYPE_STRING:
+            paramCount = 1;
+            newParamData = DataFromString(newValue.toString());
+            break;
+        case OCP1DATATYPE_NONE:
+        case OCP1DATATYPE_BOOLEAN:
+        case OCP1DATATYPE_INT8:
+        case OCP1DATATYPE_INT16:
+        case OCP1DATATYPE_INT32:
+        case OCP1DATATYPE_INT64:
+        case OCP1DATATYPE_UINT64:
+        case OCP1DATATYPE_FLOAT64:
+        case OCP1DATATYPE_BIT_STRING:
+        case OCP1DATATYPE_BLOB:
+        case OCP1DATATYPE_BLOB_FIXED_LEN:
+        case OCP1DATATYPE_CUSTOM:
+        default:
+            jassert(false); // Type conversion not implemented yet.
+            break;
+    }
+
+    return Ocp1CommandDefinition(m_targetOno,
+                                 m_propertyType,
+                                 m_propertyDefLevel,
+                                 2,                     // Set method is usually MethodIdx 2
+                                 paramCount,
+                                 newParamData);
+}
+
+juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::vector<std::uint8_t>& parameterData)
+{
+    juce::var ret;
+    bool ok(false);
+
+    switch (m_propertyType) // See enum Ocp1DataType
+    {
+        case OCP1DATATYPE_UINT8:
+            jassert(paramCount == 1);
+            ret = NanoOcp1::DataToUint8(parameterData, &ok);
+            break;
+        case OCP1DATATYPE_UINT16:
+            jassert(paramCount == 1);
+            ret = NanoOcp1::DataToUint16(parameterData, &ok);
+            break;
+        case OCP1DATATYPE_UINT32:
+            jassert(paramCount == 1);
+            ret = (int)NanoOcp1::DataToUint32(parameterData, &ok);
+            break;
+        case OCP1DATATYPE_FLOAT32:
+            jassert(paramCount == 1);
+            ret = NanoOcp1::DataToFloat(parameterData, &ok);
+            break;
+        case OCP1DATATYPE_STRING:
+            jassert(paramCount == 1);
+            ret = DataToString(parameterData, &ok);
+            break;
+        case OCP1DATATYPE_NONE:
+        case OCP1DATATYPE_BOOLEAN:
+        case OCP1DATATYPE_INT8:
+        case OCP1DATATYPE_INT16:
+        case OCP1DATATYPE_INT32:
+        case OCP1DATATYPE_INT64:
+        case OCP1DATATYPE_UINT64:
+        case OCP1DATATYPE_FLOAT64:
+        case OCP1DATATYPE_BIT_STRING:
+        case OCP1DATATYPE_BLOB:
+        case OCP1DATATYPE_BLOB_FIXED_LEN:
+        case OCP1DATATYPE_CUSTOM:
+        default:
+            break;
+    }
+
+    jassert(ok); // Type conversion failed or not implemented.
+    return ret;
+}
+
+std::unique_ptr<Ocp1CommandDefinition> Ocp1CommandDefinition::Clone() const
+{
+    return std::unique_ptr<Ocp1CommandDefinition>(new Ocp1CommandDefinition(*this));
 }
 
 
