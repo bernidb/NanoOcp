@@ -129,6 +129,22 @@ juce::String StatusToString(std::uint8_t status);
 juce::String HandleToString(std::uint32_t handle);
 
 /**
+ * Convenience method to read 4 bytes from a buffer.
+ *
+ * @param[in] buffer     Pointer to the start of the data to be read.
+ * @return  Resulting 4 bytes as an uint32_t.
+ */
+std::uint32_t ReadUint32(const char* buffer);
+
+/**
+ * Convenience method to read 2 bytes from a buffer.
+ *
+ * @param[in] buffer     Pointer to the start of the data to be read.
+ * @return  Resulting 2 bytes as an uint16_t.
+ */
+std::uint16_t ReadUint16(const char* buffer);
+
+/**
  * Convenience method to generate a unique target object number.
  * This is the method to use when addressing regular amp objects.
  *
