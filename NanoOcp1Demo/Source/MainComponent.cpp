@@ -52,14 +52,22 @@ MainComponent::MainComponent()
             std::uint32_t handle;
             m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(
                 NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Config_PotiLevel(1), handle).GetMemoryBlock());
+            m_ocaHandleMap.emplace(handle, m_potiLevelObjDef.get());
+            DBG("Sent an OCA AddSubscription command with handle " << NanoOcp1::HandleToString(handle));
+
             m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(
                 NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Settings_PwrOn(), handle).GetMemoryBlock());
+            m_ocaHandleMap.emplace(handle, m_pwrOnObjDef.get());
+            DBG("Sent an OCA AddSubscription command with handle " << NanoOcp1::HandleToString(handle));
 
             // Get initial values
             m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(*m_pwrOnObjDef.get(), handle).GetMemoryBlock());
             m_ocaHandleMap.emplace(handle, m_pwrOnObjDef.get());
+            DBG("Sent an OCA Get command with handle " << NanoOcp1::HandleToString(handle));
+
             m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(*m_potiLevelObjDef.get(), handle).GetMemoryBlock());
             m_ocaHandleMap.emplace(handle, m_potiLevelObjDef.get());
+            DBG("Sent an OCA Get command with handle " << NanoOcp1::HandleToString(handle));
         }
         else
         {
@@ -143,6 +151,8 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
                 {
                     NanoOcp1::Ocp1Notification* notifObj = static_cast<NanoOcp1::Ocp1Notification*>(msgObj.get());
 
+                    DBG("Got an OCA notification from ONo 0x" << juce::String::toHexString(notifObj->GetEmitterOno()));
+
                     // Update the right GUI element according to the definition of the object 
                     // which triggered the notification.
                     if (notifObj->MatchesObject(m_pwrOnObjDef.get()))
@@ -155,6 +165,10 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
                         std::float_t newGain = NanoOcp1::DataToFloat(notifObj->GetParameterData());
                         m_gainSlider->setValue(newGain, dontSendNotification);
                     }
+                    else
+                    {
+                        DBG("Got an OCA notification from UNKNOWN object ONo 0x" << juce::String::toHexString(notifObj->GetEmitterOno()));
+                    }
 
                     return true;
                 }
@@ -162,17 +176,24 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
                 {
                     NanoOcp1::Ocp1Response* responseObj = static_cast<NanoOcp1::Ocp1Response*>(msgObj.get());
 
-                    if (responseObj->GetResponseStatus() != 0)
+                    // Get the objDef matching the obtained response handle.
+                    const auto iter = m_ocaHandleMap.find(responseObj->GetResponseHandle());
+                    if (iter != m_ocaHandleMap.end())
                     {
-                        DBG("Got an OCA response for handle " << juce::String(responseObj->GetResponseHandle()) << 
-                            " with status " << NanoOcp1::StatusToString(responseObj->GetResponseStatus()));
-                    }
-                    else
-                    {
-                        // Get the objDef matching the obtained response handle.
-                        const auto iter = m_ocaHandleMap.find(responseObj->GetResponseHandle());
-                        if (iter != m_ocaHandleMap.end())
+                        if (responseObj->GetResponseStatus() != 0)
                         {
+                            DBG("Got an OCA response for handle " << NanoOcp1::HandleToString(responseObj->GetResponseHandle()) <<
+                                " with status " << NanoOcp1::StatusToString(responseObj->GetResponseStatus()));
+                        }
+                        else if (responseObj->GetParamCount() == 0)
+                        {
+                            DBG("Got an empty \"OK\" OCA response for handle " << NanoOcp1::HandleToString(responseObj->GetResponseHandle()));
+                        }
+                        else
+                        {
+                            DBG("Got an OCA response for handle " << NanoOcp1::HandleToString(responseObj->GetResponseHandle()) <<
+                                " and paramCount " << juce::String(responseObj->GetParamCount()));
+
                             // Update the right GUI element according to the definition of the object 
                             // which triggered the response.
                             NanoOcp1::Ocp1CommandDefinition* objDef = iter->second;
@@ -186,10 +207,21 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
                                 std::float_t newGain = NanoOcp1::DataToFloat(responseObj->GetParameterData());
                                 m_gainSlider->setValue(newGain, dontSendNotification);
                             }
-
-                            // Finally remove handle from the list, as it has been processed.
-                            m_ocaHandleMap.erase(iter);
+                            else
+                            {
+                                DBG("Got an OCA response for handle " << NanoOcp1::HandleToString(responseObj->GetResponseHandle()) <<
+                                    " which could not be processed (unknown object)!");
+                            }
                         }
+
+                        // Finally remove handle from the list, as it has been processed.
+                        m_ocaHandleMap.erase(iter);
+                    }
+                    else
+                    {
+                        DBG("Got an OCA response for UNKNOWN handle " << NanoOcp1::HandleToString(responseObj->GetResponseHandle()) <<
+                            "; status " << NanoOcp1::StatusToString(responseObj->GetResponseStatus()) <<
+                            "; paramCount " << juce::String(responseObj->GetParamCount()));
                     }
 
                     return true;
