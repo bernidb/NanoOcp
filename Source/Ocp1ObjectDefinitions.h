@@ -39,7 +39,8 @@ struct dbOcaObjectDef_Settings_PwrOn : Ocp1CommandDefinition
     dbOcaObjectDef_Settings_PwrOn() 
         : Ocp1CommandDefinition(GetONo(0x01, 0x00, 0x00, Settings_PwrOn), // ONO of Settings_PwrOn
                                 OCP1DATATYPE_UINT8,             // Value type
-                                4)                              // OcaSwitch level
+                                4,                              // OcaSwitch level
+                                1)                              // Prop_Setting
     {
     }
 };
@@ -52,7 +53,8 @@ struct dbOcaObjectDef_Config_PotiLevel : Ocp1CommandDefinition
     dbOcaObjectDef_Config_PotiLevel(std::uint32_t channel)
         : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, Config_PotiLevel), // ONO of Config_PotiLevel
                                 OCP1DATATYPE_FLOAT32,           // Value type
-                                4)                              // OcaGain level
+                                4,                              // OcaGain level
+                                1)                              // Prop_Gain
     {
     }
 };
@@ -66,7 +68,8 @@ struct dbOcaObjectDef_Config_Mute : Ocp1CommandDefinition
     dbOcaObjectDef_Config_Mute(std::uint32_t channel)
         : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, Config_Mute), // ONO of Config_Mute
                                 OCP1DATATYPE_UINT8,             // Value type
-                                4)                              // OcaMute level
+                                4,                              // OcaMute level
+                                1)                              // Prop_Setting
     {
     }
 };
@@ -79,7 +82,8 @@ struct dbOcaObjectDef_ChStatus_Isp : Ocp1CommandDefinition
     dbOcaObjectDef_ChStatus_Isp(std::uint32_t channel)
         : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Isp), // ONO of ChStatus_Isp
                                 OCP1DATATYPE_BOOLEAN,           // Value type
-                                5)                              // OcaBooleanSensor level
+                                5,                              // OcaBooleanSensor level
+                                1)                              // Prop_Reading
     {
     }
 };
@@ -91,8 +95,9 @@ struct dbOcaObjectDef_ChStatus_Gr : Ocp1CommandDefinition
 {
     dbOcaObjectDef_ChStatus_Gr(std::uint32_t channel)
         : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Gr), // ONO of ChStatus_Gr
-            OCP1DATATYPE_BOOLEAN,           // Value type
-            5)                              // OcaBooleanSensor level
+                                OCP1DATATYPE_BOOLEAN,           // Value type
+                                5,                              // OcaBooleanSensor level
+                                1)                              // Prop_Reading
     {
     }
 };
@@ -104,8 +109,9 @@ struct dbOcaObjectDef_ChStatus_Ovl : Ocp1CommandDefinition
 {
     dbOcaObjectDef_ChStatus_Ovl(std::uint32_t channel)
         : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Ovl), // ONO of ChStatus_Ovl
-            OCP1DATATYPE_BOOLEAN,           // Value type
-            5)                              // OcaBooleanSensor level
+                                OCP1DATATYPE_BOOLEAN,           // Value type
+                                5,                              // OcaBooleanSensor level
+                                1)                              // Prop_Reading
     {
     }
 };

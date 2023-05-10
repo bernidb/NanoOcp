@@ -214,13 +214,13 @@ struct Ocp1CommandDefinition
     Ocp1CommandDefinition(std::uint32_t targetOno,
                           std::uint16_t propertyType,
                           std::uint16_t propertyDefLevel,
-                          std::uint16_t methodIndex = static_cast<std::uint16_t>(0),
+                          std::uint16_t propertyIndex,
                           std::uint8_t paramCount = static_cast<std::uint8_t>(0),
                           const std::vector<std::uint8_t>& parameterData = std::vector<std::uint8_t>())
         :   m_targetOno(targetOno),
             m_propertyType(propertyType),
             m_propertyDefLevel(propertyDefLevel),
-            m_methodIndex(methodIndex),
+            m_propertyIndex(propertyIndex),
             m_paramCount(paramCount),
             m_parameterData(parameterData)
     {
@@ -242,7 +242,7 @@ struct Ocp1CommandDefinition
     virtual Ocp1CommandDefinition AddSubscriptionCommand() const;
 
     /**
-     * Generates a Ocp1CommandDefinition for a typical GetValue command.
+     * Generates a Ocp1CommandDefinition for a typical GetValue command (methodIndex 1).
      * Can be overriden for custom object GetValue commands.
      * 
      * @return A GetValue command definition.
@@ -250,7 +250,7 @@ struct Ocp1CommandDefinition
     virtual Ocp1CommandDefinition GetValueCommand() const;
 
     /**
-     * Generates a Ocp1CommandDefinition for a typical SetValue command.
+     * Generates a Ocp1CommandDefinition for a typical SetValue command (methodIndex 2).
      * Can be overriden for custom object SetValue commands.
      * 
      * @return A SetValue command definition.
@@ -282,7 +282,7 @@ struct Ocp1CommandDefinition
     std::uint32_t m_targetOno;
     std::uint16_t m_propertyType;
     std::uint16_t m_propertyDefLevel;
-    std::uint16_t m_methodIndex;
+    std::uint16_t m_propertyIndex;
     std::uint8_t m_paramCount;
     std::vector<std::uint8_t> m_parameterData;
 };
@@ -489,7 +489,7 @@ public:
      */
     Ocp1CommandResponseRequired(const Ocp1CommandDefinition& def,
                                 std::uint32_t& handle)
-        : Ocp1CommandResponseRequired(def.m_targetOno, def.m_propertyDefLevel, def.m_methodIndex,
+        : Ocp1CommandResponseRequired(def.m_targetOno, def.m_propertyDefLevel, def.m_propertyIndex,
                                       def.m_paramCount, def.m_parameterData, handle)
     {
     }
@@ -640,8 +640,8 @@ public:
     bool MatchesObject(const Ocp1CommandDefinition* def) const
     {
         return ((def->m_targetOno == m_emitterOno) && 
-                (def->m_propertyDefLevel == m_emitterPropertyDefLevel) /*&&
-                (def->m_methodIndex == m_emitterPropertyIndex)*/);
+                (def->m_propertyDefLevel == m_emitterPropertyDefLevel) &&
+                (def->m_propertyIndex == m_emitterPropertyIndex));
     }
 
     // Reimplemented from Ocp1Message
