@@ -95,10 +95,7 @@ juce::String DataToString(const std::vector<std::uint8_t>& parameterData, bool* 
     if (ok)
     {
         ret.preallocateBytes(parameterData.size() - 1);
-        for (size_t i = 2; i < parameterData.size(); i++)
-        {
-            ret += parameterData[i];
-        }
+        ret = juce::String(std::string(parameterData.begin() + 2, parameterData.end()));
     }
     
     if (pOk != nullptr)
