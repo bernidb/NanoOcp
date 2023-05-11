@@ -677,6 +677,15 @@ public:
     {
     }
 
+    /**
+     * Get this KeepAlive message's heartbeat time.
+     * @return This KeepAlive message's heartbeat time in seconds.
+     */
+    std::uint16_t GetHeartBeat() const
+    {
+        return m_heartBeat;
+    }
+
 
     // Reimplemented from Ocp1Message
 
