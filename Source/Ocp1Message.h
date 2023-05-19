@@ -607,11 +607,13 @@ public:
     Ocp1Notification(std::uint32_t emitterOno,
                      std::uint16_t emitterPropertyDefLevel,
                      std::uint16_t emitterPropertyIndex,
+                     std::uint8_t paramCount,
                      const std::vector<std::uint8_t>& parameterData)
         : Ocp1Message(static_cast<std::uint8_t>(Notification), parameterData),
             m_emitterOno(emitterOno),
             m_emitterPropertyDefLevel(emitterPropertyDefLevel),
-            m_emitterPropertyIndex(emitterPropertyIndex)
+            m_emitterPropertyIndex(emitterPropertyIndex),
+            m_paramCount(paramCount)
     {
     }
 
@@ -630,6 +632,16 @@ public:
      */
     ~Ocp1Notification() override
     {
+    }
+
+    /**
+     * Gets the number of parameters contained in this Notification.
+     *
+     * @return  Number of parameters contained in this Notification.
+     */
+    std::uint8_t GetParamCount() const
+    {
+        return m_paramCount;
     }
 
     /**
@@ -653,6 +665,11 @@ protected:
     std::uint32_t               m_emitterOno;               // TODO
     std::uint16_t               m_emitterPropertyDefLevel;
     std::uint16_t               m_emitterPropertyIndex;
+
+    /**
+     * Number of parameters contained in this Notification.
+     */
+    std::uint8_t                m_paramCount;
 };
 
 
