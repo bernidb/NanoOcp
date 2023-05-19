@@ -363,6 +363,18 @@ Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const juce::var& ne
             paramCount = 1;
             newParamData = DataFromString(newValue.toString());
             break;
+        case OCP1DATATYPE_DB_POSITION:
+            {
+                paramCount = 1;
+                MemoryBlock* mb = newValue.getBinaryData();
+                if (mb->getSize() >= 12)
+                {
+                    newParamData.reserve(12);
+                    for (size_t i = 0; i < 12; i++)
+                        newParamData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+                }
+            }
+            break;
         case OCP1DATATYPE_NONE:
         case OCP1DATATYPE_BOOLEAN:
         case OCP1DATATYPE_INT8:
@@ -414,6 +426,14 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
         case OCP1DATATYPE_STRING:
             jassert(paramCount == 1);
             ret = DataToString(parameterData, &ok);
+            break;
+        case OCP1DATATYPE_DB_POSITION:
+            ok = ((parameterData.size() == 12) && (paramCount == 1)) || // Notification contains 3 floats: x, y, z.
+                 ((parameterData.size() == 36) && (paramCount == 3));   // Response contains 9 floats: current, min, and max x, y, z.
+            if (ok)
+            {
+                ret = juce::MemoryBlock((const char*)parameterData.data(), 12);
+            }
             break;
         case OCP1DATATYPE_NONE:
         case OCP1DATATYPE_BOOLEAN:
@@ -582,7 +602,7 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
                     return nullptr;
 
                 // At least one parameter expected.
-                std::uint8_t paramCount = receivedData[22];
+                std::uint8_t paramCount = receivedData[22]; // TODO: paramCount as member of Ocp1Notification
                 if (paramCount < 1)
                     return nullptr;
 

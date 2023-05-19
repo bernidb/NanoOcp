@@ -192,7 +192,8 @@ enum Ocp1DataType
     OCP1DATATYPE_BIT_STRING         = 13,
     OCP1DATATYPE_BLOB               = 14,
     OCP1DATATYPE_BLOB_FIXED_LEN     = 15,
-    OCP1DATATYPE_CUSTOM             = 128 // User-defined types
+    OCP1DATATYPE_DB_POSITION        = 32,   // Type used by CdbOcaPositionAgentDeprecated
+    OCP1DATATYPE_CUSTOM             = 128   // User-defined types
 };
 
 
