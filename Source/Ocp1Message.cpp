@@ -363,6 +363,18 @@ Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const juce::var& ne
             paramCount = 1;
             newParamData = DataFromString(newValue.toString());
             break;
+        case OCP1DATATYPE_DB_POSITION:
+            {
+                paramCount = 1;
+                MemoryBlock* mb = newValue.getBinaryData();
+                if (mb->getSize() >= 12)
+                {
+                    newParamData.reserve(12);
+                    for (size_t i = 0; i < 12; i++)
+                        newParamData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+                }
+            }
+            break;
         case OCP1DATATYPE_NONE:
         case OCP1DATATYPE_BOOLEAN:
         case OCP1DATATYPE_INT8:
@@ -391,44 +403,53 @@ Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const juce::var& ne
 juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::vector<std::uint8_t>& parameterData)
 {
     juce::var ret;
-    bool ok(false);
 
-    switch (m_propertyType) // See enum Ocp1DataType
+    // NOTE: Notifications usually contain 2 parameters: the context and the new value.
+    // Responses usually contain 1 or 3 parameters: current value, and sometimes also min and max.
+    bool ok = (paramCount == 1) || (paramCount == 2) || (paramCount == 3);
+
+    if (ok)
     {
-        case OCP1DATATYPE_UINT8:
-            jassert(paramCount == 1);
-            ret = NanoOcp1::DataToUint8(parameterData, &ok);
-            break;
-        case OCP1DATATYPE_UINT16:
-            jassert(paramCount == 1);
-            ret = NanoOcp1::DataToUint16(parameterData, &ok);
-            break;
-        case OCP1DATATYPE_UINT32:
-            jassert(paramCount == 1);
-            ret = (int)NanoOcp1::DataToUint32(parameterData, &ok);
-            break;
-        case OCP1DATATYPE_FLOAT32:
-            jassert(paramCount == 1);
-            ret = NanoOcp1::DataToFloat(parameterData, &ok);
-            break;
-        case OCP1DATATYPE_STRING:
-            jassert(paramCount == 1);
-            ret = DataToString(parameterData, &ok);
-            break;
-        case OCP1DATATYPE_NONE:
-        case OCP1DATATYPE_BOOLEAN:
-        case OCP1DATATYPE_INT8:
-        case OCP1DATATYPE_INT16:
-        case OCP1DATATYPE_INT32:
-        case OCP1DATATYPE_INT64:
-        case OCP1DATATYPE_UINT64:
-        case OCP1DATATYPE_FLOAT64:
-        case OCP1DATATYPE_BIT_STRING:
-        case OCP1DATATYPE_BLOB:
-        case OCP1DATATYPE_BLOB_FIXED_LEN:
-        case OCP1DATATYPE_CUSTOM:
-        default:
-            break;
+        switch (m_propertyType) // See enum Ocp1DataType
+        {
+            case OCP1DATATYPE_UINT8:
+                ret = NanoOcp1::DataToUint8(parameterData, &ok);
+                break;
+            case OCP1DATATYPE_UINT16:
+                ret = NanoOcp1::DataToUint16(parameterData, &ok);
+                break;
+            case OCP1DATATYPE_UINT32:
+                ret = (int)NanoOcp1::DataToUint32(parameterData, &ok);
+                break;
+            case OCP1DATATYPE_FLOAT32:
+                ret = NanoOcp1::DataToFloat(parameterData, &ok);
+                break;
+            case OCP1DATATYPE_STRING:
+                ret = DataToString(parameterData, &ok);
+                break;
+            case OCP1DATATYPE_DB_POSITION:
+                ok = (parameterData.size() == 12) || // Notification contains 3 floats: x, y, z.
+                     (parameterData.size() == 36);   // Response contains 9 floats: current, min, and max x, y, z.
+                if (ok)
+                {
+                    ret = juce::MemoryBlock((const char*)parameterData.data(), 12);
+                }
+                break;
+            case OCP1DATATYPE_NONE:
+            case OCP1DATATYPE_BOOLEAN:
+            case OCP1DATATYPE_INT8:
+            case OCP1DATATYPE_INT16:
+            case OCP1DATATYPE_INT32:
+            case OCP1DATATYPE_INT64:
+            case OCP1DATATYPE_UINT64:
+            case OCP1DATATYPE_FLOAT64:
+            case OCP1DATATYPE_BIT_STRING:
+            case OCP1DATATYPE_BLOB:
+            case OCP1DATATYPE_BLOB_FIXED_LEN:
+            case OCP1DATATYPE_CUSTOM:
+            default:
+                break;
+        }
     }
 
     jassert(ok); // Type conversion failed or not implemented.
@@ -620,7 +641,7 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
                     parameterData.push_back(static_cast<std::uint8_t>(receivedData[37 + contextSize + i]));
                 }
 
-                return std::make_unique<Ocp1Notification>(emitterOno, propDefLevel, propIdx, parameterData);
+                return std::make_unique<Ocp1Notification>(emitterOno, propDefLevel, propIdx, paramCount, parameterData);
             }
 
         case Response:
