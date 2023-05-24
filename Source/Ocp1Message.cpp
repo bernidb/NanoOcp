@@ -479,20 +479,24 @@ Ocp1Header::Ocp1Header(const juce::MemoryBlock& memoryBlock)
         m_syncVal = memoryBlock[0];
         jassert(m_syncVal == 0x3b); // Message does not start with the sync byte.
 
-        m_protoVers = (((memoryBlock[1] << 8) & 0xff00) + memoryBlock[2]);
+        m_protoVers = ReadUint16(memoryBlock.begin() + 1);
         jassert(m_protoVers == 1); // Protocol version is expected to be 1.
         
-        m_msgSize = (((memoryBlock[3] << 24) & 0xff000000) + 
-                     ((memoryBlock[4] << 16) & 0x00ff0000) + 
-                     ((memoryBlock[5] << 8)  & 0x0000ff00) + memoryBlock[6]);
+        m_msgSize = ReadUint32(memoryBlock.begin() + 3);
         jassert(m_msgSize >= Ocp1HeaderSize); // Message has unexpected size.
 
         m_msgType = memoryBlock[7];
         jassert(m_msgType <= Ocp1Message::KeepAlive); // Message type outside expected range.
 
-        m_msgCnt = (((memoryBlock[8] << 8) & 0xff00) + memoryBlock[9]);
+        m_msgCnt = ReadUint16(memoryBlock.begin() + 8);
         jassert(m_msgCnt > 0); // At least one message expected. 
     }
+}
+
+bool Ocp1Header::IsValid() const
+{
+    return ((m_syncVal == 0x3b) && (m_protoVers == 1) && (m_msgSize >= Ocp1HeaderSize) &&
+            (m_msgType <= Ocp1Message::KeepAlive) && (m_msgCnt > 0));
 }
 
 std::vector<std::uint8_t> Ocp1Header::GetSerializedData() const
@@ -549,36 +553,11 @@ std::uint32_t Ocp1Message::m_nextHandle = 2;
 
 std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::MemoryBlock& receivedData)
 {
-    // Not enough data to fit even a Ocp1Header.
-    if (receivedData.getSize() <= 10)
+    Ocp1Header header(receivedData);
+    if (!header.IsValid())
         return nullptr;
 
-    // Message does not start with the sync byte.
-    std::uint8_t syncVal = receivedData[0];
-    if (syncVal != 0x3b)
-        return nullptr;
-
-    // Protocol version is expected to be 1.
-    std::uint16_t protoVers(ReadUint16(receivedData.begin() + 1));
-    if (protoVers != 1)
-        return nullptr;
-
-    // Message has unexpected size.
-    std::uint32_t msgSize(ReadUint32(receivedData.begin() + 3));
-    if (receivedData.getSize() != (msgSize + 1))
-        return nullptr;
-
-    // Message type outside expected range.
-    std::uint8_t msgType = receivedData[7];
-    if (msgType > KeepAlive)
-        return nullptr;
-
-    // At least one message expected. TODO: how to handle more than one?
-    std::uint16_t msgCnt(ReadUint16(receivedData.begin() + 8));
-    if (msgCnt != 1)
-        return nullptr;
-
-    switch (msgType)
+    switch (header.GetMessageType())
     {
         case Notification:
             {

@@ -340,6 +340,14 @@ public:
     }
 
     /**
+     * Checks if the header is valid.
+     *
+     * @return  True if the header's sync byte is correct, protoVers is 1, messageSize is
+     *          large enough, messageType is valid, and messageCount at least 1.
+     */
+    bool IsValid() const;
+
+    /**
      * Returns a vector of bytes representing the binary contents of the header.
      * 
      * @return  A vector of 10 bytes containing the OCA header.
