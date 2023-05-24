@@ -199,6 +199,35 @@ std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono)
     return ret;
 }
 
+bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z)
+{
+    MemoryBlock* mb = value.getBinaryData();
+    bool ok = (mb->getSize() == 12); // Value contains 3 floats: x, y, z.
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 0; i < 4; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        x = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 4; i < 8; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        y = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 8; i < 12; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        z = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+
+    return ok;
+}
+
 juce::String StatusToString(std::uint8_t status)
 {
     juce::String result;
