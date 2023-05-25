@@ -112,6 +112,17 @@ std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue);
 std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono);
 
 /**
+ * Convenience helper method to extract x, y, and z float values from a juce::var.
+ *
+ * @param[in] value The juce::var containing the values as 3 x 4 bytes.
+ * @param[out] x    The contained x value.
+ * @param[out] y    The contained y value.
+ * @param[out] z    The contained z value.
+ * @return  True if the conversion was successful. 
+ */
+bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z);
+
+/**
  * Convenience method to convert an integer representing an OcaStatus to it's string representation.
  *
  * @param[in] status     Integer representing an OcaStatus.
@@ -338,6 +349,14 @@ public:
     {
         return m_msgSize;
     }
+
+    /**
+     * Checks if the header is valid.
+     *
+     * @return  True if the header's sync byte is correct, protoVers is 1, messageSize is
+     *          large enough, messageType is valid, and messageCount at least 1.
+     */
+    bool IsValid() const;
 
     /**
      * Returns a vector of bytes representing the binary contents of the header.
