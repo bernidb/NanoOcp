@@ -162,6 +162,34 @@ std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue)
     return ret;
 }
 
+std::vector<std::uint8_t> DataFromPosition(std::float_t x, std::float_t y, std::float_t z)
+{
+    std::vector<std::uint8_t> ret;
+    ret.reserve(3 * 4);
+
+    jassert(sizeof(std::uint32_t) == sizeof(std::float_t)); // Required for pointer cast to work
+    
+    std::uint32_t intValue = *(std::uint32_t*)&x;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&y;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&z;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    return ret;
+}
+
 std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono)
 {
     std::vector<std::uint8_t> ret;

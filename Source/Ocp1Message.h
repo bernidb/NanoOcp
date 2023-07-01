@@ -97,10 +97,20 @@ std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* o
 /**
  * Convenience helper method to convert a 32-bit float into a byte vector
  *
- * @param[in] value     Value to be converted.
+ * @param[in] floatValue     Value to be converted.
  * @return  The value as a byte vector.
  */
 std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue);
+
+/**
+ * Convenience helper method to convert a 3D position (three 32-bit floats) into a byte vector
+ *
+ * @param[in] x     First value to be converted.
+ * @param[in] y     Second value to be converted.
+ * @param[in] z     Third value to be converted.
+ * @return  The values as a byte vector.
+ */
+std::vector<std::uint8_t> DataFromPosition(std::float_t x, std::float_t y, std::float_t z);
 
 /**
  * Convenience helper method to generate a byte vector containing the parameters
