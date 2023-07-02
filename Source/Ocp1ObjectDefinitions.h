@@ -19,9 +19,9 @@ namespace NanoOcp1
 typedef std::uint32_t BoxAndObjNo;
 
 //==============================================================================
-// Dy
+// Dx and Dy plattform
 //==============================================================================
-namespace Dy
+namespace DxDy
 {
 static constexpr BoxAndObjNo Settings_PwrOn         = 0x100;
 static constexpr BoxAndObjNo Config_Mute            = 0x205;
