@@ -97,10 +97,20 @@ std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* o
 /**
  * Convenience helper method to convert a 32-bit float into a byte vector
  *
- * @param[in] value     Value to be converted.
+ * @param[in] floatValue     Value to be converted.
  * @return  The value as a byte vector.
  */
 std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue);
+
+/**
+ * Convenience helper method to convert a 3D position (three 32-bit floats) into a byte vector
+ *
+ * @param[in] x     First value to be converted.
+ * @param[in] y     Second value to be converted.
+ * @param[in] z     Third value to be converted.
+ * @return  The values as a byte vector.
+ */
+std::vector<std::uint8_t> DataFromPosition(std::float_t x, std::float_t y, std::float_t z);
 
 /**
  * Convenience helper method to generate a byte vector containing the parameters
@@ -112,12 +122,48 @@ std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue);
 std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono);
 
 /**
+ * Convenience helper method to extract x, y, and z float values from a juce::var.
+ *
+ * @param[in] value The juce::var containing the values as 3 x 4 bytes.
+ * @param[out] x    The contained x value.
+ * @param[out] y    The contained y value.
+ * @param[out] z    The contained z value.
+ * @return  True if the conversion was successful. 
+ */
+bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z);
+
+/**
  * Convenience method to convert an integer representing an OcaStatus to it's string representation.
  *
  * @param[in] status     Integer representing an OcaStatus.
  * @return  The string representation of the OcaStatus.
  */
 juce::String StatusToString(std::uint8_t status);
+
+/**
+ * Convenience method to convert an integer representing an OCA Response handle to it's string representation.
+ * It will return juce::String(handle) most of the time, except in cases OCA_INVALID_SESSIONID and OCA_LOCAL_SESSIONID.
+ *
+ * @param[in] handle     OCA Response handle.
+ * @return  The string representation of the handle.
+ */
+juce::String HandleToString(std::uint32_t handle);
+
+/**
+ * Convenience method to read 4 bytes from a buffer.
+ *
+ * @param[in] buffer     Pointer to the start of the data to be read.
+ * @return  Resulting 4 bytes as an uint32_t.
+ */
+std::uint32_t ReadUint32(const char* buffer);
+
+/**
+ * Convenience method to read 2 bytes from a buffer.
+ *
+ * @param[in] buffer     Pointer to the start of the data to be read.
+ * @return  Resulting 2 bytes as an uint16_t.
+ */
+std::uint16_t ReadUint16(const char* buffer);
 
 /**
  * Convenience method to generate a unique target object number.
@@ -144,6 +190,124 @@ std::uint32_t GetONo(std::uint32_t type, std::uint32_t record, std::uint32_t cha
  */
 std::uint32_t GetONoTy2(std::uint32_t type, std::uint32_t record, std::uint32_t channel, std::uint32_t boxNumber, std::uint32_t objectNumber);
 
+
+/** 
+ * Enumeration that describes all available base data types. 
+ * Same values as OcaBaseDataType in OcaBaseDataTypes.h
+ */
+enum Ocp1DataType
+{
+    OCP1DATATYPE_NONE               = 0,
+    OCP1DATATYPE_BOOLEAN            = 1,
+    OCP1DATATYPE_INT8               = 2,
+    OCP1DATATYPE_INT16              = 3,
+    OCP1DATATYPE_INT32              = 4,
+    OCP1DATATYPE_INT64              = 5,
+    OCP1DATATYPE_UINT8              = 6,
+    OCP1DATATYPE_UINT16             = 7,
+    OCP1DATATYPE_UINT32             = 8,
+    OCP1DATATYPE_UINT64             = 9,
+    OCP1DATATYPE_FLOAT32            = 10,
+    OCP1DATATYPE_FLOAT64            = 11,
+    OCP1DATATYPE_STRING             = 12,
+    OCP1DATATYPE_BIT_STRING         = 13,
+    OCP1DATATYPE_BLOB               = 14,
+    OCP1DATATYPE_BLOB_FIXED_LEN     = 15,
+    OCP1DATATYPE_DB_POSITION        = 32,   // Type used by CdbOcaPositionAgentDeprecated
+    OCP1DATATYPE_CUSTOM             = 128   // User-defined types
+};
+
+
+/**
+ * Helper struct to encapsulate parameters for OCA Commands, Responses and Notifications.
+ */
+struct Ocp1CommandDefinition
+{
+    /**
+     * Standard struct constructor.
+     */
+    Ocp1CommandDefinition()
+    {
+    }
+
+    /**
+     * Parameterized struct constructor.
+     */
+    Ocp1CommandDefinition(std::uint32_t targetOno,
+                          std::uint16_t propertyType,
+                          std::uint16_t propertyDefLevel,
+                          std::uint16_t propertyIndex,
+                          std::uint8_t paramCount = static_cast<std::uint8_t>(0),
+                          const std::vector<std::uint8_t>& parameterData = std::vector<std::uint8_t>())
+        :   m_targetOno(targetOno),
+            m_propertyType(propertyType),
+            m_propertyDefLevel(propertyDefLevel),
+            m_propertyIndex(propertyIndex),
+            m_paramCount(paramCount),
+            m_parameterData(parameterData)
+    {
+    }
+
+    /**
+     * Struct destructor.
+     */
+    virtual ~Ocp1CommandDefinition()
+    {
+    }
+
+    /**
+     * Generates a Ocp1CommandDefinition for a typical AddSubscription command.
+     * Can be overriden for custom object AddSubscription commands.
+     * 
+     * @return An AddSubscription command definition.
+     */
+    virtual Ocp1CommandDefinition AddSubscriptionCommand() const;
+
+    /**
+     * Generates a Ocp1CommandDefinition for a typical GetValue command (methodIndex 1).
+     * Can be overriden for custom object GetValue commands.
+     * 
+     * @return A GetValue command definition.
+     */
+    virtual Ocp1CommandDefinition GetValueCommand() const;
+
+    /**
+     * Generates a Ocp1CommandDefinition for a typical SetValue command (methodIndex 2).
+     * Can be overriden for custom object SetValue commands.
+     * 
+     * @return A SetValue command definition.
+     */
+    virtual Ocp1CommandDefinition SetValueCommand(const juce::var& newValue) const;
+
+    /**
+     * Convert the parameter data obtained by i.e. an OCA Notification message to the correct
+     * data type depending on this Ocp1CommandDefinition's type.
+     * The resulting value will be returned as a variant juce::var.
+     * For example, a command definition for an OcaGain object will convert the provided byte array to a float value.
+     * 
+     * @param[in] paramCount    Number of parameters inside parameterData. Usually 1.
+     * @param[in] parameterData Byte array provided by an OCA Notification or Response message.
+     * @return    The value contained in parameterData, converted to the type corresponding to 
+     *            this Ocp1CommandDefinition, and packed into a juce::var.
+     */
+    virtual juce::var ToVariant(std::uint8_t paramCount, const std::vector<std::uint8_t>& parameterData);
+
+    /**
+     * Clone this object. To prevent slicing, this method must be overriden whenever new members or methods
+     * are added to a subclass. 
+     * 
+     * @return A unique_ptr of y copy of this object.
+     */
+    virtual std::unique_ptr<Ocp1CommandDefinition> Clone() const;
+
+
+    std::uint32_t m_targetOno;
+    std::uint16_t m_propertyType;
+    std::uint16_t m_propertyDefLevel;
+    std::uint16_t m_propertyIndex;
+    std::uint8_t m_paramCount;
+    std::vector<std::uint8_t> m_parameterData;
+};
 
 
 /**
@@ -195,6 +359,14 @@ public:
     {
         return m_msgSize;
     }
+
+    /**
+     * Checks if the header is valid.
+     *
+     * @return  True if the header's sync byte is correct, protoVers is 1, messageSize is
+     *          large enough, messageType is valid, and messageCount at least 1.
+     */
+    bool IsValid() const;
 
     /**
      * Returns a vector of bytes representing the binary contents of the header.
@@ -316,19 +488,6 @@ protected:
 
 
 /**
- * Helper struct to encapsulate paraeters for a OCA CommandResponseRequired message.
- */
-struct Ocp1CommandParameters
-{
-    std::uint32_t targetOno;
-    std::uint16_t methodDefLevel;
-    std::uint16_t methodIndex;
-    std::uint8_t paramCount;
-    std::vector<std::uint8_t> parameterData;
-};
-
-
-/**
  * Representation of an OCA CommandResponseRequired message.
  */
 class Ocp1CommandResponseRequired : public Ocp1Message
@@ -356,12 +515,12 @@ public:
     }
 
     /**
-     * Class constructor that takes parameters via a Ocp1CommandParameters struct.
+     * Class constructor that takes parameters via a Ocp1CommandDefinition struct.
      */
-    Ocp1CommandResponseRequired(const Ocp1CommandParameters& params,
+    Ocp1CommandResponseRequired(const Ocp1CommandDefinition& def,
                                 std::uint32_t& handle)
-        : Ocp1CommandResponseRequired(params.targetOno, params.methodDefLevel, params.methodIndex, 
-                                      params.paramCount, params.parameterData, handle)
+        : Ocp1CommandResponseRequired(def.m_targetOno, def.m_propertyDefLevel, def.m_propertyIndex,
+                                      def.m_paramCount, def.m_parameterData, handle)
     {
     }
 
@@ -433,9 +592,19 @@ public:
         return m_status;
     }
 
+    /**
+     * Gets the number of parameters contained in this response. Status doesn't count as a parameter.
+     *
+     * @return  Number of parameters contained in this response. 
+     */
+    std::uint8_t GetParamCount() const
+    {
+        return m_paramCount;
+    }
+
     // Reimplemented from Ocp1Message
 
-    std::vector<std::uint8_t> GetSerializedData();
+    std::vector<std::uint8_t> GetSerializedData() override;
 
 protected:
     /**
@@ -467,12 +636,24 @@ public:
     Ocp1Notification(std::uint32_t emitterOno,
                      std::uint16_t emitterPropertyDefLevel,
                      std::uint16_t emitterPropertyIndex,
+                     std::uint8_t paramCount,
                      const std::vector<std::uint8_t>& parameterData)
         : Ocp1Message(static_cast<std::uint8_t>(Notification), parameterData),
             m_emitterOno(emitterOno),
             m_emitterPropertyDefLevel(emitterPropertyDefLevel),
-            m_emitterPropertyIndex(emitterPropertyIndex)
+            m_emitterPropertyIndex(emitterPropertyIndex),
+            m_paramCount(paramCount)
     {
+    }
+
+    /**
+     * Get the ONo of the object whose property changed, triggering this notification.
+     * 
+     * @return  The emitter object's ONo.
+     */
+    std::uint32_t GetEmitterOno() const
+    {
+        return m_emitterOno;
     }
 
     /**
@@ -483,27 +664,41 @@ public:
     }
 
     /**
+     * Gets the number of parameters contained in this Notification.
+     *
+     * @return  Number of parameters contained in this Notification.
+     */
+    std::uint8_t GetParamCount() const
+    {
+        return m_paramCount;
+    }
+
+    /**
      * Helper method which matches this notification to a given object definition.
      * 
      * @param[in] TODO
      * @return  True if this notification was triggered by the given object.
      */
-    bool MatchesObject(std::uint32_t emitterOno/*, 
-                       std::uint16_t emitterPropertyDefLevel,
-                       std::uint16_t emitterPropertyIndex*/) const
+    bool MatchesObject(const Ocp1CommandDefinition* def) const
     {
-        // TODO compare defLevel and index 
-        return (emitterOno == m_emitterOno);
+        return ((def->m_targetOno == m_emitterOno) && 
+                (def->m_propertyDefLevel == m_emitterPropertyDefLevel) &&
+                (def->m_propertyIndex == m_emitterPropertyIndex));
     }
 
     // Reimplemented from Ocp1Message
 
-    std::vector<std::uint8_t> GetSerializedData();
+    std::vector<std::uint8_t> GetSerializedData() override;
 
 protected:
     std::uint32_t               m_emitterOno;               // TODO
     std::uint16_t               m_emitterPropertyDefLevel;
     std::uint16_t               m_emitterPropertyIndex;
+
+    /**
+     * Number of parameters contained in this Notification.
+     */
+    std::uint8_t                m_paramCount;
 };
 
 
@@ -529,10 +724,19 @@ public:
     {
     }
 
+    /**
+     * Get this KeepAlive message's heartbeat time.
+     * @return This KeepAlive message's heartbeat time in seconds.
+     */
+    std::uint16_t GetHeartBeat() const
+    {
+        return m_heartBeat;
+    }
+
 
     // Reimplemented from Ocp1Message
 
-    std::vector<std::uint8_t> GetSerializedData();
+    std::vector<std::uint8_t> GetSerializedData() override;
 
 protected:
     std::uint16_t               m_heartBeat;    // Heartbeat time in seconds, typically 5

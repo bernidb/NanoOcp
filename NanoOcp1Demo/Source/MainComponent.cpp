@@ -23,6 +23,10 @@ MainComponent::MainComponent()
     auto address = juce::String("127.0.0.1");
     auto port = 50014;
 
+    // Create definitions to act as event handlers for the supported objects.
+    m_pwrOnObjDef = std::make_unique<NanoOcp1::DxDy::dbOcaObjectDef_Settings_PwrOn>();
+    m_potiLevelObjDef = std::make_unique<NanoOcp1::DxDy::dbOcaObjectDef_Config_PotiLevel>(1);
+
     // Editor to allow user input for ip address and port to use to connect
     m_ipAndPortEditor = std::make_unique<TextEditor>();
     m_ipAndPortEditor->setTextToShowWhenEmpty(address + ";" + juce::String(port), getLookAndFeel().findColour(juce::TextEditor::ColourIds::textColourId).darker().darker());
@@ -44,11 +48,26 @@ MainComponent::MainComponent()
     {
         if (m_subscribeButton->getToggleState())
         {
-            auto channel = 1;
+            // Send AddSubscription requests
             std::uint32_t handle;
-            auto cmdDef = NanoOcp1::dbOcaObjectDef_Dy_AddSubscription_Config_PotiLevel;
-            cmdDef.parameterData = NanoOcp1::DataFromOnoForSubscription(GetONo(0x01, 0x00, channel, NanoOcp1::BoxAndObjNo::Config_PotiLevel)); // ONO of Config_PotiLevel Ch 1
-            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
+            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(
+                NanoOcp1::DxDy::dbOcaObjectDef_Config_PotiLevel(1).AddSubscriptionCommand(), handle).GetMemoryBlock());
+            m_ocaHandleMap.emplace(handle, m_potiLevelObjDef.get());
+            DBG("Sent an OCA AddSubscription command with handle " << NanoOcp1::HandleToString(handle));
+
+            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(
+                NanoOcp1::DxDy::dbOcaObjectDef_Settings_PwrOn().AddSubscriptionCommand(), handle).GetMemoryBlock());
+            m_ocaHandleMap.emplace(handle, m_pwrOnObjDef.get());
+            DBG("Sent an OCA AddSubscription command with handle " << NanoOcp1::HandleToString(handle));
+
+            // Get initial values
+            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(*m_pwrOnObjDef.get(), handle).GetMemoryBlock());
+            m_ocaHandleMap.emplace(handle, m_pwrOnObjDef.get());
+            DBG("Sent an OCA Get command with handle " << NanoOcp1::HandleToString(handle));
+
+            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(*m_potiLevelObjDef.get(), handle).GetMemoryBlock());
+            m_ocaHandleMap.emplace(handle, m_potiLevelObjDef.get());
+            DBG("Sent an OCA Get command with handle " << NanoOcp1::HandleToString(handle));
         }
         else
         {
@@ -73,8 +92,7 @@ MainComponent::MainComponent()
     m_powerOffD40Button->onClick = [=]() 
     {
         std::uint32_t handle;
-        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Set_Settings_PwrOn);
-        cmdDef.parameterData = NanoOcp1::DataFromUint16(static_cast<std::uint16_t>(0));
+        auto cmdDef(NanoOcp1::DxDy::dbOcaObjectDef_Settings_PwrOn().SetValueCommand(0)); // 0 == OFF
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
     };
     addAndMakeVisible(m_powerOffD40Button.get());
@@ -84,8 +102,7 @@ MainComponent::MainComponent()
     m_powerOnD40Button->onClick = [=]() 
     {
         std::uint32_t handle;
-        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Set_Settings_PwrOn);
-        cmdDef.parameterData = NanoOcp1::DataFromUint16(static_cast<std::uint16_t>(1));
+        auto cmdDef(NanoOcp1::DxDy::dbOcaObjectDef_Settings_PwrOn().SetValueCommand(1)); // 1 == ON
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
     };
     addAndMakeVisible(m_powerOnD40Button.get());
@@ -96,13 +113,8 @@ MainComponent::MainComponent()
     m_gainSlider->setTextValueSuffix("dB");
     m_gainSlider->onValueChange = [=]()
     {
-        auto channel = 1;
-
         std::uint32_t handle;
-        NanoOcp1::Ocp1CommandParameters cmdDef(NanoOcp1::dbOcaObjectDef_Dy_Set_Config_PotiLevel);
-        cmdDef.targetOno = NanoOcp1::GetONo(1, 0, channel, NanoOcp1::BoxAndObjNo::Config_PotiLevel),
-        cmdDef.parameterData = NanoOcp1::DataFromFloat(static_cast<std::float_t>(m_gainSlider->getValue()));
-
+        auto cmdDef(NanoOcp1::DxDy::dbOcaObjectDef_Config_PotiLevel(1).SetValueCommand(static_cast<std::float_t>(m_gainSlider->getValue())));
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
     };
     addAndMakeVisible(m_gainSlider.get());
@@ -139,19 +151,23 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
                 {
                     NanoOcp1::Ocp1Notification* notifObj = static_cast<NanoOcp1::Ocp1Notification*>(msgObj.get());
 
-                    auto channel = 1;
+                    DBG("Got an OCA notification from ONo 0x" << juce::String::toHexString(notifObj->GetEmitterOno()));
 
                     // Update the right GUI element according to the definition of the object 
                     // which triggered the notification.
-                    if (notifObj->MatchesObject(NanoOcp1::GetONo(1, 0, 0, NanoOcp1::BoxAndObjNo::Settings_PwrOn)))
+                    if (notifObj->MatchesObject(m_pwrOnObjDef.get()))
                     {
                         std::uint16_t switchSetting = NanoOcp1::DataToUint16(notifObj->GetParameterData());
                         m_powerD40LED->setToggleState(switchSetting > 0, dontSendNotification);
                     }
-                    else if (notifObj->MatchesObject(NanoOcp1::GetONo(1, 0, channel, NanoOcp1::BoxAndObjNo::Config_PotiLevel)))
+                    else if (notifObj->MatchesObject(m_potiLevelObjDef.get()))
                     {
                         std::float_t newGain = NanoOcp1::DataToFloat(notifObj->GetParameterData());
                         m_gainSlider->setValue(newGain, dontSendNotification);
+                    }
+                    else
+                    {
+                        DBG("Got an OCA notification from UNKNOWN object ONo 0x" << juce::String::toHexString(notifObj->GetEmitterOno()));
                     }
 
                     return true;
@@ -160,10 +176,52 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
                 {
                     NanoOcp1::Ocp1Response* responseObj = static_cast<NanoOcp1::Ocp1Response*>(msgObj.get());
 
-                    if (responseObj->GetResponseStatus() != 0)
+                    // Get the objDef matching the obtained response handle.
+                    const auto iter = m_ocaHandleMap.find(responseObj->GetResponseHandle());
+                    if (iter != m_ocaHandleMap.end())
                     {
-                        DBG("Got an OCA response for handle " << juce::String(responseObj->GetResponseHandle()) << 
-                            " with status " << NanoOcp1::StatusToString(responseObj->GetResponseStatus()));
+                        if (responseObj->GetResponseStatus() != 0)
+                        {
+                            DBG("Got an OCA response for handle " << NanoOcp1::HandleToString(responseObj->GetResponseHandle()) <<
+                                " with status " << NanoOcp1::StatusToString(responseObj->GetResponseStatus()));
+                        }
+                        else if (responseObj->GetParamCount() == 0)
+                        {
+                            DBG("Got an empty \"OK\" OCA response for handle " << NanoOcp1::HandleToString(responseObj->GetResponseHandle()));
+                        }
+                        else
+                        {
+                            DBG("Got an OCA response for handle " << NanoOcp1::HandleToString(responseObj->GetResponseHandle()) <<
+                                " and paramCount " << juce::String(responseObj->GetParamCount()));
+
+                            // Update the right GUI element according to the definition of the object 
+                            // which triggered the response.
+                            NanoOcp1::Ocp1CommandDefinition* objDef = iter->second;
+                            if (objDef == m_pwrOnObjDef.get())
+                            {
+                                std::uint16_t switchSetting = NanoOcp1::DataToUint16(responseObj->GetParameterData());
+                                m_powerD40LED->setToggleState(switchSetting > 0, dontSendNotification);
+                            }
+                            else if (objDef == m_potiLevelObjDef.get())
+                            {
+                                std::float_t newGain = NanoOcp1::DataToFloat(responseObj->GetParameterData());
+                                m_gainSlider->setValue(newGain, dontSendNotification);
+                            }
+                            else
+                            {
+                                DBG("Got an OCA response for handle " << NanoOcp1::HandleToString(responseObj->GetResponseHandle()) <<
+                                    " which could not be processed (unknown object)!");
+                            }
+                        }
+
+                        // Finally remove handle from the list, as it has been processed.
+                        m_ocaHandleMap.erase(iter);
+                    }
+                    else
+                    {
+                        DBG("Got an OCA response for UNKNOWN handle " << NanoOcp1::HandleToString(responseObj->GetResponseHandle()) <<
+                            "; status " << NanoOcp1::StatusToString(responseObj->GetResponseStatus()) <<
+                            "; paramCount " << juce::String(responseObj->GetParamCount()));
                     }
 
                     return true;
@@ -184,6 +242,9 @@ bool MainComponent::OnOcp1MessageReceived(const juce::MemoryBlock& message)
 
 MainComponent::~MainComponent()
 {
+    m_nanoOcp1Client->onDataReceived = std::function<bool(const MemoryBlock&)>();
+    m_nanoOcp1Client->onConnectionEstablished = std::function<void()>();
+    m_nanoOcp1Client->onConnectionLost = std::function<void()>();
     m_nanoOcp1Client->stop();
 }
 

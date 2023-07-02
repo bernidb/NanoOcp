@@ -24,7 +24,7 @@ class NanoOcp1Base
 public:
     //==============================================================================
     NanoOcp1Base(const juce::String& address, const int port);
-	~NanoOcp1Base();
+	virtual ~NanoOcp1Base();
 
     void setAddress(const juce::String& address);
     const juce::String& getAddress();
@@ -64,8 +64,8 @@ public:
     ~NanoOcp1Client();
 
     //==============================================================================
-    bool start();
-    bool stop();
+    bool start() override;
+    bool stop() override;
 
     //==============================================================================
     bool sendData(const juce::MemoryBlock& data) override;
@@ -93,8 +93,8 @@ public:
     ~NanoOcp1Server();
 
     //==============================================================================
-    bool start();
-    bool stop();
+    bool start() override;
+    bool stop() override;
 
     //==============================================================================
     bool sendData(const juce::MemoryBlock& data) override;

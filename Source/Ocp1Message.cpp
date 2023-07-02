@@ -48,7 +48,7 @@ std::uint16_t DataToUint16(const std::vector<std::uint8_t>& parameterData, bool*
     {
         for (size_t i = 0; (i < parameterData.size()) && (i < sizeof(std::uint16_t)); i++)
         {
-            ret = (ret << 8) + parameterData[i];
+            ret = ((ret << 8) & 0xff00) + parameterData[i];
         }
     }
 
@@ -95,10 +95,7 @@ juce::String DataToString(const std::vector<std::uint8_t>& parameterData, bool* 
     if (ok)
     {
         ret.preallocateBytes(parameterData.size() - 1);
-        for (size_t i = 2; i < parameterData.size(); i++)
-        {
-            ret += parameterData[i];
-        }
+        ret = juce::String(std::string(parameterData.begin() + 2, parameterData.end()));
     }
     
     if (pOk != nullptr)
@@ -109,7 +106,7 @@ juce::String DataToString(const std::vector<std::uint8_t>& parameterData, bool* 
     return ret;
 }
 
-std::vector<std::uint8_t> DataFromString(juce::String string)
+std::vector<std::uint8_t> DataFromString(const juce::String& string)
 {
     std::vector<std::uint8_t> ret;
 
@@ -132,10 +129,12 @@ std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* p
     std::float_t ret(0);
 
     bool ok = (parameterData.size() == 4); // 4 bytes expected.
-    ok = (sizeof(int) == sizeof(std::float_t)); // Required for pointer cast to work
+    ok = ok && (sizeof(int) == sizeof(std::float_t)); // Required for pointer cast to work
     if (ok)
     {
-        int intValue = ((parameterData[0] << 24) + (parameterData[1] << 16) + (parameterData[2] << 8) + parameterData[3]);
+        int intValue = (((parameterData[0] << 24) & 0xff000000) + 
+                        ((parameterData[1] << 16) & 0x00ff0000) + 
+                        ((parameterData[2] << 8)  & 0x0000ff00) + parameterData[3]);
         ret = *(std::float_t*)&intValue;
     }
 
@@ -155,6 +154,34 @@ std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue)
     jassert(sizeof(std::uint32_t) == sizeof(std::float_t)); // Required for pointer cast to work
     std::uint32_t intValue = *(std::uint32_t*)&floatValue;
 
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    return ret;
+}
+
+std::vector<std::uint8_t> DataFromPosition(std::float_t x, std::float_t y, std::float_t z)
+{
+    std::vector<std::uint8_t> ret;
+    ret.reserve(3 * 4);
+
+    jassert(sizeof(std::uint32_t) == sizeof(std::float_t)); // Required for pointer cast to work
+    
+    std::uint32_t intValue = *(std::uint32_t*)&x;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&y;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&z;
     ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
     ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
     ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
@@ -198,6 +225,35 @@ std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono)
     ret.push_back(static_cast<std::uint8_t>(0x00));
 
     return ret;
+}
+
+bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z)
+{
+    MemoryBlock* mb = value.getBinaryData();
+    bool ok = (mb->getSize() == 12); // Value contains 3 floats: x, y, z.
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 0; i < 4; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        x = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 4; i < 8; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        y = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 8; i < 12; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        z = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+
+    return ok;
 }
 
 juce::String StatusToString(std::uint8_t status)
@@ -262,6 +318,40 @@ juce::String StatusToString(std::uint8_t status)
     return result;
 }
 
+juce::String HandleToString(std::uint32_t handle)
+{
+    juce::String result;
+
+    switch (handle)
+    {
+        case 0: // OCA_INVALID_SESSIONID
+            result = juce::String("InvalidSessionID");
+            break;
+        case 1: // OCA_LOCAL_SESSIONID
+            result = juce::String("LocalSessionID");
+            break;
+        default: 
+            result = juce::String(handle);
+            break;
+    }
+
+    return result;
+}
+
+std::uint32_t ReadUint32(const char* buffer)
+{
+    return (((static_cast<std::uint8_t>(buffer[0]) << 24) & 0xff000000) +
+            ((static_cast<std::uint8_t>(buffer[1]) << 16) & 0x00ff0000) +
+            ((static_cast<std::uint8_t>(buffer[2]) << 8)  & 0x0000ff00) +
+              static_cast<std::uint8_t>(buffer[3]));
+}
+
+std::uint16_t ReadUint16(const char* buffer)
+{
+    return (((static_cast<std::uint8_t>(buffer[0]) << 8)  & 0xff00) +
+              static_cast<std::uint8_t>(buffer[1]));
+}
+
 std::uint32_t GetONo(std::uint32_t type, std::uint32_t record, std::uint32_t channel, std::uint32_t boxAndObjectNumber)
 {
     return (std::uint32_t((type) & 0xF) << 28)
@@ -277,6 +367,155 @@ std::uint32_t GetONoTy2(std::uint32_t type, std::uint32_t record, std::uint32_t 
         | (std::uint32_t((channel) & 0xFF) << 12)
         | (std::uint32_t((boxNumber) & 0x1F) << 7)
         | (std::uint32_t((objectNumber) & 0x7F));
+}
+
+
+//==============================================================================
+// Class Ocp1CommandDefinition
+//==============================================================================
+Ocp1CommandDefinition Ocp1CommandDefinition::AddSubscriptionCommand() const
+{
+    return Ocp1CommandDefinition(0x00000004,                     // ONO of OcaSubscriptionManager
+                                 m_propertyType,
+                                 3,                              // OcaSubscriptionManager level
+                                 1,                              // AddSubscription method
+                                 5,                              // 5 Params 
+                                 DataFromOnoForSubscription(m_targetOno));
+}
+
+Ocp1CommandDefinition Ocp1CommandDefinition::GetValueCommand() const
+{
+    return Ocp1CommandDefinition(m_targetOno,
+                                 m_propertyType,
+                                 m_propertyDefLevel,
+                                 1,                              // Get method is usually MethodIdx 1
+                                 0,                              // 0 Param
+                                 std::vector<std::uint8_t>());   // Empty parameters
+}
+
+Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const juce::var& newValue) const
+{
+    std::uint8_t paramCount(0);
+    std::vector<std::uint8_t> newParamData;
+
+    switch (m_propertyType) // See enum Ocp1DataType
+    {
+        case OCP1DATATYPE_UINT8:
+            paramCount = 1;
+            newParamData = DataFromUint8(static_cast<std::uint8_t>(int(newValue)));
+            break;
+        case OCP1DATATYPE_UINT16:
+            paramCount = 1;
+            newParamData = DataFromUint16(static_cast<std::uint16_t>(int(newValue)));
+            break;
+        case OCP1DATATYPE_UINT32:
+            paramCount = 1;
+            newParamData = DataFromUint32(static_cast<std::uint32_t>(int(newValue)));
+            break;
+        case OCP1DATATYPE_FLOAT32:
+            paramCount = 1;
+            newParamData = DataFromFloat(float(newValue));
+            break;
+        case OCP1DATATYPE_STRING:
+            paramCount = 1;
+            newParamData = DataFromString(newValue.toString());
+            break;
+        case OCP1DATATYPE_DB_POSITION:
+            {
+                paramCount = 1;
+                MemoryBlock* mb = newValue.getBinaryData();
+                if (mb->getSize() >= 12)
+                {
+                    newParamData.reserve(12);
+                    for (size_t i = 0; i < 12; i++)
+                        newParamData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+                }
+            }
+            break;
+        case OCP1DATATYPE_NONE:
+        case OCP1DATATYPE_BOOLEAN:
+        case OCP1DATATYPE_INT8:
+        case OCP1DATATYPE_INT16:
+        case OCP1DATATYPE_INT32:
+        case OCP1DATATYPE_INT64:
+        case OCP1DATATYPE_UINT64:
+        case OCP1DATATYPE_FLOAT64:
+        case OCP1DATATYPE_BIT_STRING:
+        case OCP1DATATYPE_BLOB:
+        case OCP1DATATYPE_BLOB_FIXED_LEN:
+        case OCP1DATATYPE_CUSTOM:
+        default:
+            jassert(false); // Type conversion not implemented yet.
+            break;
+    }
+
+    return Ocp1CommandDefinition(m_targetOno,
+                                 m_propertyType,
+                                 m_propertyDefLevel,
+                                 2,                     // Set method is usually MethodIdx 2
+                                 paramCount,
+                                 newParamData);
+}
+
+juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::vector<std::uint8_t>& parameterData)
+{
+    juce::var ret;
+
+    // NOTE: Notifications usually contain 2 parameters: the context and the new value.
+    // Responses usually contain 1 or 3 parameters: current value, and sometimes also min and max.
+    bool ok = (paramCount == 1) || (paramCount == 2) || (paramCount == 3);
+
+    if (ok)
+    {
+        switch (m_propertyType) // See enum Ocp1DataType
+        {
+            case OCP1DATATYPE_UINT8:
+                ret = NanoOcp1::DataToUint8(parameterData, &ok);
+                break;
+            case OCP1DATATYPE_UINT16:
+                ret = NanoOcp1::DataToUint16(parameterData, &ok);
+                break;
+            case OCP1DATATYPE_UINT32:
+                ret = (int)NanoOcp1::DataToUint32(parameterData, &ok);
+                break;
+            case OCP1DATATYPE_FLOAT32:
+                ret = NanoOcp1::DataToFloat(parameterData, &ok);
+                break;
+            case OCP1DATATYPE_STRING:
+                ret = DataToString(parameterData, &ok);
+                break;
+            case OCP1DATATYPE_DB_POSITION:
+                ok = (parameterData.size() == 12) || // Notification contains 3 floats: x, y, z.
+                     (parameterData.size() == 36);   // Response contains 9 floats: current, min, and max x, y, z.
+                if (ok)
+                {
+                    ret = juce::MemoryBlock((const char*)parameterData.data(), 12);
+                }
+                break;
+            case OCP1DATATYPE_NONE:
+            case OCP1DATATYPE_BOOLEAN:
+            case OCP1DATATYPE_INT8:
+            case OCP1DATATYPE_INT16:
+            case OCP1DATATYPE_INT32:
+            case OCP1DATATYPE_INT64:
+            case OCP1DATATYPE_UINT64:
+            case OCP1DATATYPE_FLOAT64:
+            case OCP1DATATYPE_BIT_STRING:
+            case OCP1DATATYPE_BLOB:
+            case OCP1DATATYPE_BLOB_FIXED_LEN:
+            case OCP1DATATYPE_CUSTOM:
+            default:
+                break;
+        }
+    }
+
+    jassert(ok); // Type conversion failed or not implemented.
+    return ret;
+}
+
+std::unique_ptr<Ocp1CommandDefinition> Ocp1CommandDefinition::Clone() const
+{
+    return std::unique_ptr<Ocp1CommandDefinition>(new Ocp1CommandDefinition(*this));
 }
 
 
@@ -297,18 +536,24 @@ Ocp1Header::Ocp1Header(const juce::MemoryBlock& memoryBlock)
         m_syncVal = memoryBlock[0];
         jassert(m_syncVal == 0x3b); // Message does not start with the sync byte.
 
-        m_protoVers = ((memoryBlock[1] << 8) + memoryBlock[2]);
+        m_protoVers = ReadUint16(memoryBlock.begin() + 1);
         jassert(m_protoVers == 1); // Protocol version is expected to be 1.
         
-        m_msgSize = ((memoryBlock[3] << 24) + (memoryBlock[4] << 16) + (memoryBlock[5] << 8) + memoryBlock[6]);
+        m_msgSize = ReadUint32(memoryBlock.begin() + 3);
         jassert(m_msgSize >= Ocp1HeaderSize); // Message has unexpected size.
 
         m_msgType = memoryBlock[7];
         jassert(m_msgType <= Ocp1Message::KeepAlive); // Message type outside expected range.
 
-        m_msgCnt = ((memoryBlock[8] << 8) + memoryBlock[9]);
+        m_msgCnt = ReadUint16(memoryBlock.begin() + 8);
         jassert(m_msgCnt > 0); // At least one message expected. 
     }
+}
+
+bool Ocp1Header::IsValid() const
+{
+    return ((m_syncVal == 0x3b) && (m_protoVers == 1) && (m_msgSize >= Ocp1HeaderSize) &&
+            (m_msgType <= Ocp1Message::KeepAlive) && (m_msgCnt > 0));
 }
 
 std::vector<std::uint8_t> Ocp1Header::GetSerializedData() const
@@ -360,62 +605,36 @@ std::uint32_t Ocp1Header::CalculateMessageSize(std::uint8_t msgType, size_t para
 // Class Ocp1Message
 //==============================================================================
 
-std::uint32_t Ocp1Message::m_nextHandle = 1;
+// OCA_INVALID_SESSIONID  == 0, OCA_LOCAL_SESSIONID == 1
+std::uint32_t Ocp1Message::m_nextHandle = 2;
 
 std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::MemoryBlock& receivedData)
 {
-    // Not enough data to fit even a Ocp1Header.
-    if (receivedData.getSize() <= 10)
+    Ocp1Header header(receivedData);
+    if (!header.IsValid())
         return nullptr;
 
-    // Message does not start with the sync byte.
-    std::uint8_t syncVal = receivedData[0];
-    if (syncVal != 0x3b)
-        return nullptr;
-
-    // Protocol version is expected to be 1.
-    std::uint16_t protoVers = ((receivedData[1] << 8) + receivedData[2]);
-    if (protoVers != 1)
-        return nullptr;
-
-    // Message has unexpected size.
-    std::uint32_t msgSize = ((receivedData[3] << 24) + (receivedData[4] << 16) + (receivedData[5] << 8) + receivedData[6]);
-    if (receivedData.getSize() != (msgSize + 1))
-        return nullptr;
-
-    // Message type outside expected range.
-    std::uint8_t msgType = receivedData[7];
-    if (msgType > KeepAlive)
-        return nullptr;
-
-    // At least one message expected. TODO: how to handle more than one?
-    std::uint16_t msgCnt = ((receivedData[8] << 8) + receivedData[9]);
-    if (msgCnt != 1)
-        return nullptr;
-
-    switch (msgType)
+    switch (header.GetMessageType())
     {
         case Notification:
             {
-                std::uint32_t notificationSize = ((receivedData[10] << 24) + (receivedData[11] << 16) + (receivedData[12] << 8) + receivedData[13]);
+                std::uint32_t notificationSize(ReadUint32(receivedData.begin() + 10));
                 std::uint32_t newValueSize = notificationSize - 28;
                 if (newValueSize < 1)
                     return nullptr;
 
                 // Not a valid object number.
-                std::uint32_t targetOno = (((receivedData[14] << 24) & 0xff000000) + 
-                                           ((receivedData[15] << 16) & 0x00ff0000) + 
-                                           ((receivedData[16] << 8)  & 0x0000ff00) + receivedData[17]);
+                std::uint32_t targetOno(ReadUint32(receivedData.begin() + 14));
                 if (targetOno == 0)
                     return nullptr;
 
                 // Method DefinitionLevel expected to be 3 (OcaSubscriptionManager)
-                std::uint16_t methodDefLevel = ((receivedData[18] << 8) + receivedData[19]);
+                std::uint16_t methodDefLevel(ReadUint16(receivedData.begin() + 18));
                 if (methodDefLevel < 1)
                     return nullptr;
 
                 // Method index expected to be 1 (AddSubscription)
-                std::uint16_t methodIdx = ((receivedData[20] << 8) + receivedData[21]);
+                std::uint16_t methodIdx(ReadUint16(receivedData.begin() + 20));
                 if (methodIdx < 1)
                     return nullptr;
 
@@ -424,32 +643,30 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
                 if (paramCount < 1)
                     return nullptr;
 
-                std::uint16_t contextSize = ((receivedData[23] << 8) + receivedData[24]);
+                std::uint16_t contextSize(ReadUint16(receivedData.begin() + 23));
 
                 // Not a valid object number.
-                std::uint32_t emitterOno = (((receivedData[25 + contextSize] << 24) & 0xff000000) +
-                                            ((receivedData[26 + contextSize] << 16) & 0x00ff0000) +
-                                            ((receivedData[27 + contextSize] << 8)  & 0x0000ff00) + receivedData[28 + contextSize]);
+                std::uint32_t emitterOno(ReadUint32(receivedData.begin() + 25 + contextSize));
                 if (emitterOno == 0)
                     return nullptr;
 
                 // Event definiton level expected to be 1 (OcaRoot).
-                std::uint16_t eventDefLevel = ((receivedData[29 + contextSize] << 8) + receivedData[30 + contextSize]);
+                std::uint16_t eventDefLevel(ReadUint16(receivedData.begin() + 29 + contextSize));
                 if (eventDefLevel != 1)
                     return nullptr;
 
                 // Event index expected to be 1 (OCA_EVENT_PROPERTY_CHANGED).
-                std::uint16_t eventIdx = ((receivedData[31 + contextSize] << 8) + receivedData[32 + contextSize]);
+                std::uint16_t eventIdx(ReadUint16(receivedData.begin() + 31 + contextSize));
                 if (eventIdx != 1)
                     return nullptr;
 
                 // Property definition level expected to be > 0.
-                std::uint16_t propDefLevel = ((receivedData[33 + contextSize] << 8) + receivedData[34 + contextSize]);
+                std::uint16_t propDefLevel(ReadUint16(receivedData.begin() + 33 + contextSize));
                 if (propDefLevel == 0)
                     return nullptr;
 
                 // Property index expected to be > 0.
-                std::uint16_t propIdx = ((receivedData[35 + contextSize] << 8) + receivedData[36 + contextSize]);
+                std::uint16_t propIdx(ReadUint16(receivedData.begin() + 35 + contextSize));
                 if (propIdx == 0)
                     return nullptr;
 
@@ -460,18 +677,18 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
                     parameterData.push_back(static_cast<std::uint8_t>(receivedData[37 + contextSize + i]));
                 }
 
-                return std::make_unique<Ocp1Notification>(emitterOno, propDefLevel, propIdx, parameterData);
+                return std::make_unique<Ocp1Notification>(emitterOno, propDefLevel, propIdx, paramCount, parameterData);
             }
 
         case Response:
             {
-                std::uint32_t responseSize = ((receivedData[10] << 24) + (receivedData[11] << 16) + (receivedData[12] << 8) + receivedData[13]);
+                std::uint32_t responseSize(ReadUint32(receivedData.begin() + 10));
                 std::uint32_t parameterDataLength = responseSize - 10;
                 if (responseSize < 10)
                     return nullptr;
 
                 // Not a valid handle.
-                std::uint32_t handle = ((receivedData[14] << 24) + (receivedData[15] << 16) + (receivedData[16] << 8) + receivedData[17]);
+                std::uint32_t handle(ReadUint32(receivedData.begin() + 14));
                 if (handle == 0)
                     return nullptr;
 
@@ -493,7 +710,7 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
 
         case KeepAlive:
             {
-                std::uint16_t heartbeat = ((receivedData[10] << 8) + receivedData[11]);
+                std::uint16_t heartbeat(ReadUint16(receivedData.begin() + 10));
 
                 return std::make_unique<Ocp1KeepAlive>(heartbeat);
             }
