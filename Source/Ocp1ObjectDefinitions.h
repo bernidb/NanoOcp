@@ -159,6 +159,50 @@ static constexpr BoxAndObjNo ChStatus_Ovl_5D        = 0x403; //OVL 5D
 // for example let the definitions above take in a GUID parameter and 
 // internally the correct ONO is used depending on the GUID?
 
+
+
+/**
+ * ChStatus_Isp
+ */
+struct dbOcaObjectDef_ChStatus_Isp : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_ChStatus_Isp(std::uint32_t channel)
+        : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Isp_5D), // ONO of ChStatus_Isp
+            OCP1DATATYPE_BOOLEAN,           // Value type
+            5,                              // OcaBooleanSensor level
+            1)                              // Prop_Reading
+    {
+    }
+};
+
+/**
+ * ChStatus_Gr
+ */
+struct dbOcaObjectDef_ChStatus_Gr : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_ChStatus_Gr(std::uint32_t channel)
+        : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Gr_5D), // ONO of ChStatus_Gr
+            OCP1DATATYPE_BOOLEAN,           // Value type
+            5,                              // OcaBooleanSensor level
+            1)                              // Prop_Reading
+    {
+    }
+};
+
+/**
+ * ChStatus_Ovl
+ */
+struct dbOcaObjectDef_ChStatus_Ovl : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_ChStatus_Ovl(std::uint32_t channel)
+        : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Ovl_5D), // ONO of ChStatus_Ovl
+            OCP1DATATYPE_BOOLEAN,           // Value type
+            5,                              // OcaBooleanSensor level
+            1)                              // Prop_Reading
+    {
+    }
+};
+
 }
 
 }
