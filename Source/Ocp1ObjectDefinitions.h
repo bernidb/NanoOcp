@@ -23,12 +23,14 @@ typedef std::uint32_t BoxAndObjNo;
 //==============================================================================
 namespace DxDy
 {
+
 static constexpr BoxAndObjNo Settings_PwrOn             = 0x100;
 static constexpr BoxAndObjNo Config_Mute                = 0x205;
 static constexpr BoxAndObjNo Config_PotiLevel           = 0x206;
 static constexpr BoxAndObjNo ChStatus_Isp               = 0x400;
 static constexpr BoxAndObjNo ChStatus_Gr                = 0x401;
 static constexpr BoxAndObjNo ChStatus_Ovl               = 0x402;
+static constexpr BoxAndObjNo ChStatus_GrHead            = 0x40a;
 static constexpr BoxAndObjNo Input_Digital_Level        = 0xe05;
 static constexpr BoxAndObjNo Input_Digital_LevelPeak    = 0xe06;
 
@@ -111,9 +113,23 @@ struct dbOcaObjectDef_ChStatus_Ovl : Ocp1CommandDefinition
 {
     dbOcaObjectDef_ChStatus_Ovl(std::uint32_t channel)
         : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Ovl), // ONO of ChStatus_Ovl
-                                OCP1DATATYPE_BOOLEAN,           // Value type
-                                5,                              // OcaBooleanSensor level
-                                1)                              // Prop_Reading
+            OCP1DATATYPE_BOOLEAN,           // Value type
+            5,                              // OcaBooleanSensor level
+            1)                              // Prop_Reading
+    {
+    }
+};
+
+/**
+ * ChStatus_GrHead
+ */
+struct dbOcaObjectDef_ChStatus_GrHead : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_ChStatus_GrHead(std::uint32_t channel)
+        : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_GrHead), // ONO of ChStatus_GrHead
+            OCP1DATATYPE_FLOAT32,           // Value type
+            4,                              // OcaAudioLevelSensor level
+            1)                              // Prop_Reading ?
     {
     }
 };
@@ -151,15 +167,32 @@ struct dbOcaObjectDef_Input_Digital_LevelPeak : Ocp1CommandDefinition
 
 namespace Amp5D // NOTE: namespaces starting with numbers cause problems
 {
-static constexpr BoxAndObjNo ChStatus_Isp_5D        = 0x401; //ISP 5D
-static constexpr BoxAndObjNo ChStatus_Gr_5D         = 0x402; //GR 5D
-static constexpr BoxAndObjNo ChStatus_Ovl_5D        = 0x403; //OVL 5D
+
+static constexpr BoxAndObjNo Settings_PwrOn     = 0x101; 
+static constexpr BoxAndObjNo ChStatus_Isp       = 0x401; //ISP 5D
+static constexpr BoxAndObjNo ChStatus_Gr        = 0x402; //GR 5D
+static constexpr BoxAndObjNo ChStatus_Ovl       = 0x403; //OVL 5D
+static constexpr BoxAndObjNo ChStatus_GrHead    = 0x404; //GrHead 5D
 
 // TODO: define 5D objects. Copy paste? Or is there a more elegant way, 
 // for example let the definitions above take in a GUID parameter and 
 // internally the correct ONO is used depending on the GUID?
 
 
+/**
+ * Settings_PwrOn
+ * Parameters for SetValueCommand: setting 1 == ON; 0 == OFF
+ */
+struct dbOcaObjectDef_Settings_PwrOn : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_Settings_PwrOn()
+        : Ocp1CommandDefinition(GetONo(0x01, 0x00, 0x00, Settings_PwrOn), // ONO of Settings_PwrOn
+            OCP1DATATYPE_UINT8,             // Value type
+            4,                              // OcaSwitch level
+            1)                              // Prop_Setting
+    {
+    }
+};
 
 /**
  * ChStatus_Isp
@@ -167,7 +200,7 @@ static constexpr BoxAndObjNo ChStatus_Ovl_5D        = 0x403; //OVL 5D
 struct dbOcaObjectDef_ChStatus_Isp : Ocp1CommandDefinition
 {
     dbOcaObjectDef_ChStatus_Isp(std::uint32_t channel)
-        : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Isp_5D), // ONO of ChStatus_Isp
+        : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Isp), // ONO of ChStatus_Isp
             OCP1DATATYPE_BOOLEAN,           // Value type
             5,                              // OcaBooleanSensor level
             1)                              // Prop_Reading
@@ -181,7 +214,7 @@ struct dbOcaObjectDef_ChStatus_Isp : Ocp1CommandDefinition
 struct dbOcaObjectDef_ChStatus_Gr : Ocp1CommandDefinition
 {
     dbOcaObjectDef_ChStatus_Gr(std::uint32_t channel)
-        : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Gr_5D), // ONO of ChStatus_Gr
+        : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Gr), // ONO of ChStatus_Gr
             OCP1DATATYPE_BOOLEAN,           // Value type
             5,                              // OcaBooleanSensor level
             1)                              // Prop_Reading
@@ -195,10 +228,24 @@ struct dbOcaObjectDef_ChStatus_Gr : Ocp1CommandDefinition
 struct dbOcaObjectDef_ChStatus_Ovl : Ocp1CommandDefinition
 {
     dbOcaObjectDef_ChStatus_Ovl(std::uint32_t channel)
-        : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Ovl_5D), // ONO of ChStatus_Ovl
+        : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_Ovl), // ONO of ChStatus_Ovl
             OCP1DATATYPE_BOOLEAN,           // Value type
             5,                              // OcaBooleanSensor level
             1)                              // Prop_Reading
+    {
+    }
+};
+
+/**
+ * ChStatus_GrHead
+ */
+struct dbOcaObjectDef_ChStatus_GrHead : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_ChStatus_GrHead(std::uint32_t channel)
+        : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_GrHead), // ONO of ChStatus_GrHead
+            OCP1DATATYPE_FLOAT32,           // Value type
+            4,                              // OcaAudioLevelSensor level
+            1)                              // Prop_Reading ?
     {
     }
 };
