@@ -129,7 +129,7 @@ std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* p
     std::float_t ret(0);
 
     bool ok = (parameterData.size() == 4); // 4 bytes expected.
-    ok = (sizeof(int) == sizeof(std::float_t)); // Required for pointer cast to work
+    ok = ok && (sizeof(int) == sizeof(std::float_t)); // Required for pointer cast to work
     if (ok)
     {
         int intValue = (((parameterData[0] << 24) & 0xff000000) + 
