@@ -23,12 +23,14 @@ typedef std::uint32_t BoxAndObjNo;
 //==============================================================================
 namespace DxDy
 {
-static constexpr BoxAndObjNo Settings_PwrOn         = 0x100;
-static constexpr BoxAndObjNo Config_Mute            = 0x205;
-static constexpr BoxAndObjNo Config_PotiLevel       = 0x206;
-static constexpr BoxAndObjNo ChStatus_Isp           = 0x400;
-static constexpr BoxAndObjNo ChStatus_Gr            = 0x401;
-static constexpr BoxAndObjNo ChStatus_Ovl           = 0x402;
+static constexpr BoxAndObjNo Settings_PwrOn             = 0x100;
+static constexpr BoxAndObjNo Config_Mute                = 0x205;
+static constexpr BoxAndObjNo Config_PotiLevel           = 0x206;
+static constexpr BoxAndObjNo ChStatus_Isp               = 0x400;
+static constexpr BoxAndObjNo ChStatus_Gr                = 0x401;
+static constexpr BoxAndObjNo ChStatus_Ovl               = 0x402;
+static constexpr BoxAndObjNo Input_Digital_Level        = 0xe05;
+static constexpr BoxAndObjNo Input_Digital_LevelPeak    = 0xe06;
 
 /**
  * Settings_PwrOn
@@ -112,6 +114,34 @@ struct dbOcaObjectDef_ChStatus_Ovl : Ocp1CommandDefinition
                                 OCP1DATATYPE_BOOLEAN,           // Value type
                                 5,                              // OcaBooleanSensor level
                                 1)                              // Prop_Reading
+    {
+    }
+};
+
+/**
+ * Input_Digital_Level
+ */
+struct dbOcaObjectDef_Input_Digital_Level : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_Input_Digital_Level(std::uint32_t record)
+        : Ocp1CommandDefinition(GetONo(0x01, record, 0x00, Input_Digital_Level), // ONO of Input_Digital_Level
+            OCP1DATATYPE_FLOAT32,           // Value type
+            4,                              // OcaAudioLevelSensor level
+            1)                              // Prop_Level ?
+    {
+    }
+};
+
+/**
+ * Input_Digital_LevelPeak
+ */
+struct dbOcaObjectDef_Input_Digital_LevelPeak : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_Input_Digital_LevelPeak(std::uint32_t record)
+        : Ocp1CommandDefinition(GetONo(0x01, record, 0x00, Input_Digital_LevelPeak), // ONO of Input_Digital_LevelPeak
+            OCP1DATATYPE_FLOAT32,           // Value type
+            4,                              // OcaAudioLevelSensor level
+            1)                              // Prop_Level ?
     {
     }
 };
