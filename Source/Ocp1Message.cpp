@@ -17,7 +17,7 @@ namespace NanoOcp1
 std::uint8_t DataToUint8(const std::vector<std::uint8_t>& parameterData, bool* pOk)
 {
     std::uint8_t ret(0);
-    bool ok = parameterData.size() > 0;
+    bool ok = (parameterData.size() >= sizeof(std::uint8_t));
     if (ok)
     {
         ret = parameterData[0];
@@ -43,10 +43,10 @@ std::vector<std::uint8_t> DataFromUint8(std::uint8_t value)
 std::uint16_t DataToUint16(const std::vector<std::uint8_t>& parameterData, bool* pOk)
 {
     std::uint16_t ret(0);
-    bool ok = parameterData.size() > 0;
+    bool ok = (parameterData.size() >= sizeof(std::uint16_t));
     if (ok)
     {
-        for (size_t i = 0; (i < parameterData.size()) && (i < sizeof(std::uint16_t)); i++)
+        for (size_t i = 0; i < sizeof(std::uint16_t); i++)
         {
             ret = ((ret << 8) & 0xff00) + parameterData[i];
         }
@@ -128,7 +128,7 @@ std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* p
 {
     std::float_t ret(0);
 
-    bool ok = (parameterData.size() == 4); // 4 bytes expected.
+    bool ok = (parameterData.size() >= sizeof(std::float_t)); // 4 bytes expected.
     ok = ok && (sizeof(int) == sizeof(std::float_t)); // Required for pointer cast to work
     if (ok)
     {
