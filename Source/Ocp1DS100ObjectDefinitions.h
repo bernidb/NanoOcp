@@ -33,14 +33,16 @@ namespace DS100
 
 static constexpr std::uint16_t MaxChannelCount = 64;
 
+static constexpr BoxAndObjNo Settings_Box = 0x01;
+static constexpr BoxAndObjNo Settings_DeviceName = 0x0d;
+
+static constexpr BoxAndObjNo MatrixSettings_Box = 0x02;
+static constexpr BoxAndObjNo MatrixSettings_ReverbRoomId = 0x0a;
+static constexpr BoxAndObjNo MatrixSettings_ReverbPredelayFactor = 0x04;
+static constexpr BoxAndObjNo MatrixSettings_ReverbRearLevel = 0x15;
+
 static constexpr BoxAndObjNo CoordinateMapping_Box              = 0x16;
 static constexpr BoxAndObjNo CoordinateMapping_Source_Position  = 0x01;
-
-static constexpr BoxAndObjNo Positioning_Box                = 0x0d;
-static constexpr BoxAndObjNo Positioning_Source_Position    = 0x02;
-static constexpr BoxAndObjNo Positioning_Source_Spread      = 0x04;
-static constexpr BoxAndObjNo Positioning_Source_DelayMode   = 0x0b;
-static constexpr BoxAndObjNo Positioning_Speaker_Position   = 0x07;
 
 static constexpr BoxAndObjNo MatrixInput_Box                = 0x05;
 static constexpr BoxAndObjNo MatrixInput_Mute               = 0x01;
@@ -49,11 +51,41 @@ static constexpr BoxAndObjNo MatrixInput_ChannelName        = 0x07;
 static constexpr BoxAndObjNo MatrixInput_LevelMeterPreMute  = 0x09;
 static constexpr BoxAndObjNo MatrixInput_ReverbSendGain     = 0x0d;
 
-static constexpr BoxAndObjNo MatrixOutput_Box               = 0x08;
-static constexpr BoxAndObjNo MatrixOutput_Mute              = 0x01;
-static constexpr BoxAndObjNo MatrixOutput_Gain              = 0x02;
-static constexpr BoxAndObjNo MatrixOutput_ChannelName       = 0x07;
-static constexpr BoxAndObjNo MatrixOutput_LevelMeterPreMute = 0x09;
+static constexpr BoxAndObjNo MatrixOutput_Box                   = 0x08;
+static constexpr BoxAndObjNo MatrixOutput_Mute                  = 0x01;
+static constexpr BoxAndObjNo MatrixOutput_Gain                  = 0x02;
+static constexpr BoxAndObjNo MatrixOutput_ChannelName           = 0x07;
+static constexpr BoxAndObjNo MatrixOutput_LevelMeterPreMute     = 0x09;
+static constexpr BoxAndObjNo MatrixOutput_LevelMeterPostMute    = 0x0a;
+
+static constexpr BoxAndObjNo Positioning_Box = 0x0d;
+static constexpr BoxAndObjNo Positioning_Source_Position = 0x02;
+static constexpr BoxAndObjNo Positioning_Source_Spread = 0x04;
+static constexpr BoxAndObjNo Positioning_Source_DelayMode = 0x0b;
+static constexpr BoxAndObjNo Positioning_Speaker_Position = 0x07;
+
+static constexpr BoxAndObjNo Scene_Box              = 0x17;
+static constexpr BoxAndObjNo Scene_SceneIndex       = 0x01;
+static constexpr BoxAndObjNo Scene_SceneName        = 0x03;
+static constexpr BoxAndObjNo Scene_SceneComment     = 0x04;
+static constexpr BoxAndObjNo Scene_SceneNext        = 0x00; /*todo*/
+static constexpr BoxAndObjNo Scene_ScenePrevious    = 0x00; /*todo*/
+static constexpr BoxAndObjNo Scene_SceneRecall      = 0x00; /*todo*/
+
+
+/**
+ * Settings_DeviceName
+ */
+struct dbOcaObjectDef_Settings_DeviceName : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_Settings_DeviceName()
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, 0x00, Settings_Box, Settings_DeviceName), // ONO of Settings_DeviceName,
+            OCP1DATATYPE_STRING,    // Value type
+            5,                      // OcaStringActuator level - root:worker:actuator:basicactuator:stringactuator
+            1)                      // Prop_Setting
+    {
+    }
+};
 
 /**
  * CoordinateMapping_Source_Position
@@ -62,9 +94,9 @@ struct dbOcaObjectDef_CoordinateMapping_Source_Position : Ocp1CommandDefinition
 {
     dbOcaObjectDef_CoordinateMapping_Source_Position(std::uint32_t record, std::uint32_t channel)
         : Ocp1CommandDefinition(GetONoTy2(0x02, record, channel, CoordinateMapping_Box, CoordinateMapping_Source_Position), // ONO of CoordinateMapping_Source_Position,
-            OCP1DATATYPE_DB_POSITION, // Value type
-            3,                                  // CdbOcaPositionAgentDeprecated level
-            1)                                  // Prop_Position
+            OCP1DATATYPE_DB_POSITION,   // Value type
+            3,                          // CdbOcaPositionAgentDeprecated level
+            1)                          // Prop_Position
     {
     }
 };
@@ -249,6 +281,104 @@ struct dbOcaObjectDef_MatrixOutput_LevelMeterPreMute : Ocp1CommandDefinition
             OCP1DATATYPE_FLOAT32,           // Value type
             4,                              // OcaAudioLevelSensor level
             1)                              // Prop_Level
+    {
+    }
+};
+
+/**
+ * MatrixOutput_LevelMeterPostMute
+ */
+struct dbOcaObjectDef_MatrixOutput_LevelMeterPostMute : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_MatrixOutput_LevelMeterPostMute(std::uint32_t channel)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, channel, MatrixInput_Box, MatrixOutput_LevelMeterPostMute), // ONO of MatrixOutput_LevelMeterPostMute
+            OCP1DATATYPE_FLOAT32,           // Value type
+            4,                              // OcaAudioLevelSensor level
+            1)                              // Prop_Level
+    {
+    }
+};
+
+/**
+ * MatrixSettings_ReverbRoomId
+ */
+struct dbOcaObjectDef_MatrixSettings_ReverbRoomId : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_MatrixSettings_ReverbRoomId()
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, 0x00, MatrixSettings_Box, MatrixSettings_ReverbRoomId), // ONO of MatrixSettings_ReverbRoomId
+            OCP1DATATYPE_UINT16,    // Value type
+            4,                      // OcaSwitch level - root:worker:actuator:switch
+            1)                      // Prop_Position
+    {
+    }
+};
+
+/**
+ * MatrixSettings_ReverbPredelayFactor
+ */
+struct dbOcaObjectDef_MatrixSettings_ReverbPredelayFactor : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_MatrixSettings_ReverbPredelayFactor()
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, 0x00, MatrixSettings_Box, MatrixSettings_ReverbPredelayFactor), // ONO of MatrixSettings_ReverbPredelayFactor
+            OCP1DATATYPE_FLOAT32,           // Value type
+            4,                              // OcaAudioLevelSensor level
+            1)                              // Prop_Level
+    {
+    }
+};
+
+/**
+ * MatrixSettings_ReverbRearLevel
+ */
+struct dbOcaObjectDef_MatrixSettings_ReverbRearLevel : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_MatrixSettings_ReverbRearLevel()
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, 0x00, MatrixSettings_Box, MatrixSettings_ReverbRearLevel), // ONO of MatrixSettings_ReverbRearLevel
+            OCP1DATATYPE_FLOAT32,           // Value type
+            4,                              // OcaGain level - root:worker:actuator:gain
+            1)                              // Prop_Gain
+    {
+    }
+};
+
+/**
+ * Scene_SceneIndex
+ */
+struct dbOcaObjectDef_Scene_SceneIndex : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_Scene_SceneIndex()
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, 0x00, Scene_Box, Scene_SceneIndex), // ONO of Scene_SceneIndex,
+            OCP1DATATYPE_STRING,    // Value type
+            5,                      // OcaStringActuator level - root:worker:actuator:basicactuator:stringactuator
+            1)                      // Prop_Setting
+    {
+    }
+};
+
+/**
+ * Scene_SceneName
+ */
+struct dbOcaObjectDef_Scene_SceneName : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_Scene_SceneName()
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, 0x00, Scene_Box, Scene_SceneName), // ONO of Scene_SceneName,
+            OCP1DATATYPE_STRING,    // Value type
+            5,                      // OcaStringActuator level - root:worker:actuator:basicactuator:stringactuator
+            1)                      // Prop_Setting
+    {
+    }
+};
+
+/**
+ * Scene_SceneComment
+ */
+struct dbOcaObjectDef_Scene_SceneComment : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_Scene_SceneComment()
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, 0x00, Scene_Box, Scene_SceneComment), // ONO of Scene_SceneComment,
+            OCP1DATATYPE_STRING,    // Value type
+            5,                      // OcaStringActuator level - root:worker:actuator:basicactuator:stringactuator
+            1)                      // Prop_Setting
     {
     }
 };
