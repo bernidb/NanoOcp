@@ -58,19 +58,18 @@ static constexpr BoxAndObjNo MatrixOutput_ChannelName           = 0x07;
 static constexpr BoxAndObjNo MatrixOutput_LevelMeterPreMute     = 0x09;
 static constexpr BoxAndObjNo MatrixOutput_LevelMeterPostMute    = 0x0a;
 
-static constexpr BoxAndObjNo Positioning_Box = 0x0d;
-static constexpr BoxAndObjNo Positioning_Source_Position = 0x02;
-static constexpr BoxAndObjNo Positioning_Source_Spread = 0x04;
-static constexpr BoxAndObjNo Positioning_Source_DelayMode = 0x0b;
-static constexpr BoxAndObjNo Positioning_Speaker_Position = 0x07;
+static constexpr BoxAndObjNo Positioning_Box                = 0x0d;
+static constexpr BoxAndObjNo Positioning_Source_Position    = 0x02;
+static constexpr BoxAndObjNo Positioning_Source_Spread      = 0x04;
+static constexpr BoxAndObjNo Positioning_Source_DelayMode   = 0x0b;
+static constexpr BoxAndObjNo Positioning_Speaker_Position   = 0x07;
 
 static constexpr BoxAndObjNo Scene_Box              = 0x17;
 static constexpr BoxAndObjNo Scene_SceneIndex       = 0x01;
 static constexpr BoxAndObjNo Scene_SceneName        = 0x03;
 static constexpr BoxAndObjNo Scene_SceneComment     = 0x04;
-static constexpr BoxAndObjNo Scene_SceneNext        = 0x00; /*todo*/
-static constexpr BoxAndObjNo Scene_ScenePrevious    = 0x00; /*todo*/
-static constexpr BoxAndObjNo Scene_SceneRecall      = 0x00; /*todo*/
+
+static constexpr std::uint32_t  SceneAgentONo   = 0x2714;
 
 
 /**
@@ -380,6 +379,56 @@ struct dbOcaObjectDef_Scene_SceneComment : Ocp1CommandDefinition
             5,                      // OcaStringActuator level - root:worker:actuator:basicactuator:stringactuator
             1)                      // Prop_Setting
     {
+    }
+};
+
+/**
+ * SceneAgent
+ */
+struct dbOcaObjectDef_SceneAgent : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_SceneAgent()
+        : Ocp1CommandDefinition(SceneAgentONo, // ONO of custom SceneAgent,
+            OCP1DATATYPE_UINT32,    // Value type
+            4,                      // SceneAgent level - root:agent:datatransfer:sceneagent
+            0)                      // Dummy
+    {
+    }
+
+    Ocp1CommandDefinition ApplyCommand(std::uint16_t major, std::uint16_t minor)
+    {
+        std::uint32_t newValue = minor + (major << 16);
+
+        std::uint8_t paramCount(1);
+        std::vector<std::uint8_t> newParamData = DataFromUint32(newValue);
+
+        return Ocp1CommandDefinition(m_targetOno,
+            OCP1DATATYPE_UINT32,
+            m_propertyDefLevel,
+            7,                     // ApplyScene is MethodIdx 7
+            paramCount,
+            newParamData);
+    }
+
+    Ocp1CommandDefinition PreviousCommand()
+    {
+        return Ocp1CommandDefinition(m_targetOno,
+            OCP1DATATYPE_NONE,
+            m_propertyDefLevel,
+            8);                     // PreviousScene is MethodIdx 8
+    }
+
+    Ocp1CommandDefinition NextCommand()
+    {
+        return Ocp1CommandDefinition(m_targetOno,
+            OCP1DATATYPE_NONE,
+            m_propertyDefLevel,
+            9);                     // NextScene is MethodIdx 9
+    }
+
+    std::unique_ptr<Ocp1CommandDefinition> Clone() const override
+    {
+        return std::unique_ptr<Ocp1CommandDefinition>(new dbOcaObjectDef_SceneAgent(*this));
     }
 };
 

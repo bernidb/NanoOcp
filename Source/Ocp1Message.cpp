@@ -81,16 +81,24 @@ std::uint32_t DataToUint32(const std::vector<std::uint8_t>& /*parameterData*/, b
 {
     std::uint32_t ret(0);
 
+    jassertfalse;
+
     // TODO
 
     return ret;
 }
 
-std::vector<std::uint8_t> DataFromUint32(std::uint32_t /*value*/)
+std::vector<std::uint8_t> DataFromUint32(std::uint32_t intValue)
 {
     std::vector<std::uint8_t> ret;
+    ret.reserve(4);
 
-    // TODO
+    jassert(sizeof(std::uint32_t) == sizeof(std::float_t)); // Required for pointer cast to work
+
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
 
     return ret;
 }
