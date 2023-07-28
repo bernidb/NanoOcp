@@ -32,8 +32,8 @@ MainComponent::MainComponent()
     auto port = 50014;
 
     // Create definitions to act as event handlers for the supported objects.
-    m_pwrOnObjDef = std::make_unique<NanoOcp1::DxDy::dbOcaObjectDef_Settings_PwrOn>();
-    m_potiLevelObjDef = std::make_unique<NanoOcp1::DxDy::dbOcaObjectDef_Config_PotiLevel>(1);
+    m_pwrOnObjDef = std::make_unique<NanoOcp1::AmpDxDy::dbOcaObjectDef_Settings_PwrOn>();
+    m_potiLevelObjDef = std::make_unique<NanoOcp1::AmpGeneric::dbOcaObjectDef_Config_PotiLevel>(1);
 
     // Editor to allow user input for ip address and port to use to connect
     m_ipAndPortEditor = std::make_unique<TextEditor>();
@@ -59,12 +59,12 @@ MainComponent::MainComponent()
             // Send AddSubscription requests
             std::uint32_t handle;
             m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(
-                NanoOcp1::DxDy::dbOcaObjectDef_Config_PotiLevel(1).AddSubscriptionCommand(), handle).GetMemoryBlock());
+                NanoOcp1::AmpGeneric::dbOcaObjectDef_Config_PotiLevel(1).AddSubscriptionCommand(), handle).GetMemoryBlock());
             m_ocaHandleMap.emplace(handle, m_potiLevelObjDef.get());
             DBG("Sent an OCA AddSubscription command with handle " << NanoOcp1::HandleToString(handle));
 
             m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(
-                NanoOcp1::DxDy::dbOcaObjectDef_Settings_PwrOn().AddSubscriptionCommand(), handle).GetMemoryBlock());
+                NanoOcp1::AmpDxDy::dbOcaObjectDef_Settings_PwrOn().AddSubscriptionCommand(), handle).GetMemoryBlock());
             m_ocaHandleMap.emplace(handle, m_pwrOnObjDef.get());
             DBG("Sent an OCA AddSubscription command with handle " << NanoOcp1::HandleToString(handle));
 
@@ -100,7 +100,7 @@ MainComponent::MainComponent()
     m_powerOffD40Button->onClick = [=]() 
     {
         std::uint32_t handle;
-        auto cmdDef(NanoOcp1::DxDy::dbOcaObjectDef_Settings_PwrOn().SetValueCommand(0)); // 0 == OFF
+        auto cmdDef(NanoOcp1::AmpDxDy::dbOcaObjectDef_Settings_PwrOn().SetValueCommand(0)); // 0 == OFF
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
     };
     addAndMakeVisible(m_powerOffD40Button.get());
@@ -110,7 +110,7 @@ MainComponent::MainComponent()
     m_powerOnD40Button->onClick = [=]() 
     {
         std::uint32_t handle;
-        auto cmdDef(NanoOcp1::DxDy::dbOcaObjectDef_Settings_PwrOn().SetValueCommand(1)); // 1 == ON
+        auto cmdDef(NanoOcp1::AmpDxDy::dbOcaObjectDef_Settings_PwrOn().SetValueCommand(1)); // 1 == ON
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
     };
     addAndMakeVisible(m_powerOnD40Button.get());
@@ -122,7 +122,7 @@ MainComponent::MainComponent()
     m_gainSlider->onValueChange = [=]()
     {
         std::uint32_t handle;
-        auto cmdDef(NanoOcp1::DxDy::dbOcaObjectDef_Config_PotiLevel(1).SetValueCommand(static_cast<std::float_t>(m_gainSlider->getValue())));
+        auto cmdDef(NanoOcp1::AmpGeneric::dbOcaObjectDef_Config_PotiLevel(1).SetValueCommand(static_cast<std::float_t>(m_gainSlider->getValue())));
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
     };
     addAndMakeVisible(m_gainSlider.get());
