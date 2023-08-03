@@ -36,10 +36,10 @@ static constexpr std::uint16_t MaxChannelCount = 64;
 static constexpr BoxAndObjNo Settings_Box = 0x01;
 static constexpr BoxAndObjNo Settings_DeviceName = 0x0d;
 
-static constexpr BoxAndObjNo MatrixSettings_Box = 0x02;
-static constexpr BoxAndObjNo MatrixSettings_ReverbRoomId = 0x0a;
-static constexpr BoxAndObjNo MatrixSettings_ReverbPredelayFactor = 0x04;
-static constexpr BoxAndObjNo MatrixSettings_ReverbRearLevel = 0x15;
+static constexpr BoxAndObjNo MatrixSettings_Box                     = 0x02;
+static constexpr BoxAndObjNo MatrixSettings_ReverbRoomId            = 0x0a;
+static constexpr BoxAndObjNo MatrixSettings_ReverbPredelayFactor    = 0x14;
+static constexpr BoxAndObjNo MatrixSettings_ReverbRearLevel         = 0x15;
 
 static constexpr BoxAndObjNo CoordinateMapping_Box              = 0x16;
 static constexpr BoxAndObjNo CoordinateMapping_Source_Position  = 0x01;
@@ -320,8 +320,8 @@ struct dbOcaObjectDef_MatrixSettings_ReverbPredelayFactor : Ocp1CommandDefinitio
     dbOcaObjectDef_MatrixSettings_ReverbPredelayFactor()
         : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, 0x00, MatrixSettings_Box, MatrixSettings_ReverbPredelayFactor), // ONO of MatrixSettings_ReverbPredelayFactor
             OCP1DATATYPE_FLOAT32,           // Value type
-            4,                              // OcaAudioLevelSensor level
-            1)                              // Prop_Level
+            5,                              // OcaFloat32Actuator level - root:worker:actuator:basicactuator:float32actuator
+            1)                              // Prop_Setting
     {
     }
 };
