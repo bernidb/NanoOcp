@@ -141,7 +141,7 @@ std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono);
 bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z);
 
 /**
- * Convenience method to convert an integer representing an OcaStatus to it's string representation.
+ * Convenience method to convert an integer representing an OcaStatus to its string representation.
  *
  * @param[in] status     Integer representing an OcaStatus.
  * @return  The string representation of the OcaStatus.
@@ -149,7 +149,15 @@ bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y,
 juce::String StatusToString(std::uint8_t status);
 
 /**
- * Convenience method to convert an integer representing an OCA Response handle to it's string representation.
+ * Convenience method to convert an integer representing an Ocp1DataType to its string representation.
+ *
+ * @param[in] dataType  Integer representing an Ocp1DataType.
+ * @return  The string representation of the Ocp1DataType.
+ */
+juce::String DataTypeToString(int dataType);
+
+/**
+ * Convenience method to convert an integer representing an OCA Response handle to its string representation.
  * It will return juce::String(handle) most of the time, except in cases OCA_INVALID_SESSIONID and OCA_LOCAL_SESSIONID.
  *
  * @param[in] handle     OCA Response handle.

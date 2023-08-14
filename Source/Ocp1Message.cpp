@@ -334,6 +334,70 @@ juce::String StatusToString(std::uint8_t status)
     return result;
 }
 
+juce::String DataTypeToString(int dataType)
+{
+    juce::String result;
+
+    switch (dataType)
+    {
+    case OCP1DATATYPE_BOOLEAN: 
+        result = juce::String("Boolean");
+        break;
+    case OCP1DATATYPE_INT8:
+        result = juce::String("Int8");
+        break;
+    case OCP1DATATYPE_INT16:
+        result = juce::String("Int16");
+        break;
+    case OCP1DATATYPE_INT32:
+        result = juce::String("Int32");
+        break;
+    case OCP1DATATYPE_INT64:
+        result = juce::String("Int64");
+        break;
+    case OCP1DATATYPE_UINT8:
+        result = juce::String("UInt8");
+        break;
+    case OCP1DATATYPE_UINT16:
+        result = juce::String("UInt16");
+        break;
+    case OCP1DATATYPE_UINT32:
+        result = juce::String("UInt32");
+        break;
+    case OCP1DATATYPE_UINT64:
+        result = juce::String("UInt64");
+        break;
+    case OCP1DATATYPE_FLOAT32:
+        result = juce::String("Float32");
+        break;
+    case OCP1DATATYPE_FLOAT64:
+        result = juce::String("Float64");
+        break;
+    case OCP1DATATYPE_STRING:
+        result = juce::String("String");
+        break;
+    case OCP1DATATYPE_BIT_STRING:
+        result = juce::String("BitString");
+        break;
+    case OCP1DATATYPE_BLOB:
+        result = juce::String("Blob");
+        break;
+    case OCP1DATATYPE_BLOB_FIXED_LEN:
+        result = juce::String("BlobFixedLength");
+        break;
+    case OCP1DATATYPE_DB_POSITION:
+        result = juce::String("Position (d&b)");
+        break;
+    case OCP1DATATYPE_CUSTOM:
+        result = juce::String("Custom");
+        break;
+    default:
+        break;
+    }
+
+    return result;
+}
+
 juce::String HandleToString(std::uint32_t handle)
 {
     juce::String result;
