@@ -22,6 +22,39 @@
 namespace NanoOcp1
 {
 
+std::int32_t DataToInt32(const std::vector<std::uint8_t>& parameterData, bool* pOk)
+{
+    std::int32_t ret(0);
+
+    bool ok = (parameterData.size() >= sizeof(std::int32_t)); // 4 bytes expected.
+    if (ok)
+    {
+        ret = (((parameterData[0] << 24) & 0xff000000) +
+               ((parameterData[1] << 16) & 0x00ff0000) +
+               ((parameterData[2] << 8)  & 0x0000ff00) + parameterData[3]);
+    }
+
+    if (pOk != nullptr)
+    {
+        *pOk = ok;
+    }
+
+    return ret;
+}
+
+std::vector<std::uint8_t> DataFromInt32(std::int32_t intValue)
+{
+    std::vector<std::uint8_t> ret;
+    ret.reserve(4);
+
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    return ret;
+}
+
 std::uint8_t DataToUint8(const std::vector<std::uint8_t>& parameterData, bool* pOk)
 {
     std::uint8_t ret(0);
@@ -487,6 +520,10 @@ Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const juce::var& ne
 
     switch (m_propertyType) // See enum Ocp1DataType
     {
+        case OCP1DATATYPE_INT32:
+            paramCount = 1;
+            newParamData = DataFromInt32(static_cast<std::int32_t>(int(newValue)));
+            break;
         case OCP1DATATYPE_UINT8:
             paramCount = 1;
             newParamData = DataFromUint8(static_cast<std::uint8_t>(int(newValue)));
@@ -523,7 +560,6 @@ Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const juce::var& ne
         case OCP1DATATYPE_BOOLEAN:
         case OCP1DATATYPE_INT8:
         case OCP1DATATYPE_INT16:
-        case OCP1DATATYPE_INT32:
         case OCP1DATATYPE_INT64:
         case OCP1DATATYPE_UINT64:
         case OCP1DATATYPE_FLOAT64:
@@ -556,6 +592,9 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
     {
         switch (m_propertyType) // See enum Ocp1DataType
         {
+            case OCP1DATATYPE_INT32:
+                ret = (int)NanoOcp1::DataToInt32(parameterData, &ok);
+                break;
             case OCP1DATATYPE_UINT8:
                 ret = NanoOcp1::DataToUint8(parameterData, &ok);
                 break;
@@ -583,7 +622,6 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
             case OCP1DATATYPE_BOOLEAN:
             case OCP1DATATYPE_INT8:
             case OCP1DATATYPE_INT16:
-            case OCP1DATATYPE_INT32:
             case OCP1DATATYPE_INT64:
             case OCP1DATATYPE_UINT64:
             case OCP1DATATYPE_FLOAT64:

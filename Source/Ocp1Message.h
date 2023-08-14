@@ -25,6 +25,23 @@ namespace NanoOcp1
 {
 
 /**
+ * Convenience helper method to convert a byte vector into a Int32
+ *
+ * @param[in] parameterData     Vector of bytes containing the value to be converted.
+ * @param[in] ok                Optional parameter to verify if the conversion was successful.
+ * @return  The value contained in the parameterData as a Int32.
+ */
+std::int32_t DataToInt32(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
+
+/**
+ * Convenience helper method to convert a Int32 into a byte vector
+ *
+ * @param[in] value     Value to be converted.
+ * @return  The value as a byte vector.
+ */
+std::vector<std::uint8_t> DataFromInt32(std::int32_t value);
+
+/**
  * Convenience helper method to convert a byte vector into a Uint8
  * 
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
