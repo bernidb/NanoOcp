@@ -77,13 +77,22 @@ std::vector<std::uint8_t> DataFromUint16(std::uint16_t value)
     return ret;
 }
 
-std::uint32_t DataToUint32(const std::vector<std::uint8_t>& /*parameterData*/, bool* /*pOk*/)
+std::uint32_t DataToUint32(const std::vector<std::uint8_t>& parameterData, bool* pOk)
 {
     std::uint32_t ret(0);
 
-    jassertfalse;
+    bool ok = (parameterData.size() >= sizeof(std::uint32_t)); // 4 bytes expected.
+    if (ok)
+    {
+        ret = (((parameterData[0] << 24) & 0xff000000) +
+               ((parameterData[1] << 16) & 0x00ff0000) +
+               ((parameterData[2] << 8)  & 0x0000ff00) + parameterData[3]);
+    }
 
-    // TODO
+    if (pOk != nullptr)
+    {
+        *pOk = ok;
+    }
 
     return ret;
 }
@@ -92,8 +101,6 @@ std::vector<std::uint8_t> DataFromUint32(std::uint32_t intValue)
 {
     std::vector<std::uint8_t> ret;
     ret.reserve(4);
-
-    jassert(sizeof(std::uint32_t) == sizeof(std::float_t)); // Required for pointer cast to work
 
     ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
     ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
