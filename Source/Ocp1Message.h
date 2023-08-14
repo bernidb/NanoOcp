@@ -547,6 +547,15 @@ public:
     {
     }
 
+    /**
+     * Override the automatically assigned command handle with a manually defined one.
+     * 
+     * @param[in] handle    New command handle to use.
+     */
+    void SetHandle(std::uint32_t handle)
+    {
+        m_handle = handle;
+    }
 
     // Reimplemented from Ocp1Message
 
