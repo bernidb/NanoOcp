@@ -246,6 +246,52 @@ std::vector<std::uint8_t> DataFromPosition(std::float_t x, std::float_t y, std::
     return ret;
 }
 
+std::vector<std::uint8_t> DataFromPositionAndRotation(std::float_t x, std::float_t y, std::float_t z, std::float_t hor, std::float_t vert, std::float_t rot)
+{
+    std::vector<std::uint8_t> ret;
+    ret.reserve(6 * 4);
+
+    jassert(sizeof(std::uint32_t) == sizeof(std::float_t)); // Required for pointer cast to work
+
+    std::uint32_t intValue = *(std::uint32_t*)&x;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&y;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&z;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&hor;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&vert;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&rot;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    return ret;
+}
+
 std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono)
 {
     std::vector<std::uint8_t> ret;
@@ -286,7 +332,8 @@ std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono)
 bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z)
 {
     MemoryBlock* mb = value.getBinaryData();
-    bool ok = (mb->getSize() == 12); // Value contains 3 floats: x, y, z.
+    bool ok = (mb->getSize() == 12  // Value contains 3 floats: x, y, z.
+        || mb->getSize() == 36); // Value contains 9 floats: x, y, z and min and max each on top.
     if (ok)
     {
         std::vector<std::uint8_t> paramData;
@@ -307,6 +354,56 @@ bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y,
         for (size_t i = 8; i < 12; i++)
             paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
         z = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+
+    return ok;
+}
+
+bool VariantToPositionAndRotation(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z, std::float_t& hor, std::float_t& vert, std::float_t& rot)
+{
+    MemoryBlock* mb = value.getBinaryData();
+    bool ok = (mb->getSize() == 24); // Value contains 6 floats: x, y, z, horAngle, vertAngle, rotAngle.
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 0; i < 4; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        x = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 4; i < 8; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        y = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 8; i < 12; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        z = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 12; i < 16; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        hor = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 16; i < 20; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        vert = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 20; i < 24; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        rot = NanoOcp1::DataToFloat(paramData, &ok);
     }
 
     return ok;
@@ -585,8 +682,7 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
     juce::var ret;
 
     // NOTE: Notifications usually contain 2 parameters: the context and the new value.
-    // Responses usually contain 1 or 3 parameters: current value, and sometimes also min and max.
-    bool ok = (paramCount == 1) || (paramCount == 2) || (paramCount == 3);
+    bool ok = (paramCount == 1) || (paramCount == 2) || (paramCount == 3) || (paramCount == 6);
 
     if (ok)
     {
@@ -612,10 +708,11 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
                 break;
             case OCP1DATATYPE_DB_POSITION:
                 ok = (parameterData.size() == 12) || // Notification contains 3 floats: x, y, z.
+                     (parameterData.size() == 24) || // Notification contains 6 floats: x, y, z, hor, vert, rot.
                      (parameterData.size() == 36);   // Response contains 9 floats: current, min, and max x, y, z.
                 if (ok)
                 {
-                    ret = juce::MemoryBlock((const char*)parameterData.data(), 12);
+                    ret = juce::MemoryBlock((const char*)parameterData.data(), parameterData.size());
                 }
                 break;
             case OCP1DATATYPE_NONE:

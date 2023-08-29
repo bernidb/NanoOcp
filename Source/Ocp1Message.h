@@ -138,6 +138,19 @@ std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue);
 std::vector<std::uint8_t> DataFromPosition(std::float_t x, std::float_t y, std::float_t z);
 
 /**
+ * Convenience helper method to convert a 3D position (three 32-bit floats) into a byte vector
+ *
+ * @param[in] x     First value to be converted.
+ * @param[in] y     Second value to be converted.
+ * @param[in] z     Third value to be converted.
+ * @param[in] hor   Fourth value to be converted.
+ * @param[in] vert  Fifth value to be converted.
+ * @param[in] rot   Sixth value to be converted.
+ * @return  The values as a byte vector.
+ */
+std::vector<std::uint8_t> DataFromPositionAndRotation(std::float_t x, std::float_t y, std::float_t z, std::float_t hor, std::float_t vert, std::float_t rot);
+
+/**
  * Convenience helper method to generate a byte vector containing the parameters
  * necessary for an AddSubscription command for a given object.
  *
@@ -156,6 +169,20 @@ std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono);
  * @return  True if the conversion was successful. 
  */
 bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z);
+
+/**
+ * Convenience helper method to extract x, y, z, horizontal angle, vertical angle and rotation angle float values from a juce::var.
+ *
+ * @param[in] value The juce::var containing the values as 6 x 4 bytes.
+ * @param[out] x    The contained x value.
+ * @param[out] y    The contained y value.
+ * @param[out] z    The contained z value.
+ * @param[out] hor  The contained horizontal angle value.
+ * @param[out] vert The contained vertical angle value.
+ * @param[out] rot  The contained rotation angle value.
+ * @return  True if the conversion was successful.
+ */
+bool VariantToPositionAndRotation(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z, std::float_t& hor, std::float_t& vert, std::float_t& rot);
 
 /**
  * Convenience method to convert an integer representing an OcaStatus to its string representation.
