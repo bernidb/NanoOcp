@@ -686,6 +686,7 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
 
     if (ok)
     {
+        ok = false;
         switch (m_propertyType) // See enum Ocp1DataType
         {
             case OCP1DATATYPE_INT32:
