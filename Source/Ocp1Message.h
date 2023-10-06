@@ -185,6 +185,26 @@ bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y,
 bool VariantToPositionAndRotation(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z, std::float_t& hor, std::float_t& vert, std::float_t& rot);
 
 /**
+ * Convenience helper method to exract a std::vector<bool> from a from a juce::var.
+ * The juce::var needs to be of type MemoryBlock, and the contents need to be marshalled as an OcaList<OcaBoolean>.
+ *
+ * @param[in] value         The juce::var containing a list of boolean values.
+ * @param[out] boolVector   The resulting std::vector<bool>. 
+ * @return  True if the conversion was successful.
+ */
+bool VariantToBoolVector(const juce::var& value, std::vector<bool>& boolVector);
+
+/**
+ * Convenience helper method to exract a juce::StringArray from a from a juce::var.
+ * The juce::var needs to be of type MemoryBlock, and the contents need to be marshalled as an OcaList<OcaString>.
+ *
+ * @param[in] value         The juce::var containing a list of strings.
+ * @param[out] stringArray  The resulting juce::StringArray.
+ * @return  True if the conversion was successful.
+ */
+bool VariantToStringArray(const juce::var& value, juce::StringArray& stringArray);
+
+/**
  * Convenience method to convert an integer representing an OcaStatus to its string representation.
  *
  * @param[in] status     Integer representing an OcaStatus.

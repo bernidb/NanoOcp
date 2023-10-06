@@ -409,6 +409,78 @@ bool VariantToPositionAndRotation(const juce::var& value, std::float_t& x, std::
     return ok;
 }
 
+bool VariantToBoolVector(const juce::var& value, std::vector<bool>& boolVector)
+{
+    std::uint16_t listSize(0);
+
+    jassert(value.isBinaryData());
+    MemoryBlock* mb = value.getBinaryData();
+
+    bool ok = (mb && (mb->getSize() >= 2)); // OcaList size takes up the first 2 bytes.
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        paramData.push_back(static_cast<std::uint8_t>(mb->begin()[0]));
+        paramData.push_back(static_cast<std::uint8_t>(mb->begin()[1]));
+        listSize = NanoOcp1::DataToUint16(paramData, &ok);
+    }
+
+    if (ok)
+    {
+        boolVector.clear();
+        boolVector.reserve(listSize);
+        for (int listIdx = 0; listIdx < listSize; ++listIdx)
+        {
+            boolVector.push_back(static_cast<std::uint8_t>(mb->begin()[listIdx + 2]) == static_cast <std::uint8_t>(1));
+        }
+        jassert(boolVector.size() == listSize);
+    }
+
+    return ok;
+}
+
+bool VariantToStringArray(const juce::var& value, juce::StringArray& stringArray)
+{
+    std::uint16_t listSize(0);
+    size_t readPos = 0;
+
+    jassert(value.isBinaryData());
+    MemoryBlock* mb = value.getBinaryData();
+
+    bool ok = (mb && (mb->getSize() >= 2)); // OcaList size takes up the first 2 bytes.
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        paramData.push_back(static_cast<std::uint8_t>(mb->begin()[readPos++]));
+        paramData.push_back(static_cast<std::uint8_t>(mb->begin()[readPos++]));
+        listSize = NanoOcp1::DataToUint16(paramData, &ok);
+    }
+
+    if (ok)
+    {
+        stringArray.clear();
+        stringArray.ensureStorageAllocated(listSize);
+
+        for (int listIdx = 0; listIdx < listSize; ++listIdx)
+        {
+            std::vector<std::uint8_t> paramData;
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[readPos++]));
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[readPos++]));
+            auto stringLen = NanoOcp1::DataToUint16(paramData, &ok);
+
+            if (ok)
+            {
+                stringArray.add(juce::String(std::string(mb->begin() + readPos, stringLen)));
+                readPos += stringLen;
+            }
+        }
+
+        jassert(stringArray.size() == listSize);
+    }
+
+    return ok;
+}
+
 juce::String StatusToString(std::uint8_t status)
 {
     juce::String result;
