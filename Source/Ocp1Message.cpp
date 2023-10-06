@@ -788,6 +788,13 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
                     ret = juce::MemoryBlock((const char*)parameterData.data(), parameterData.size());
                 }
                 break;
+            case OCP1DATATYPE_BLOB:
+                ok = (parameterData.size() >= 2); // OcaBlob size is 2 bytes
+                if (ok)
+                {
+                    ret = juce::MemoryBlock((const char*)parameterData.data(), parameterData.size());
+                }
+                break;
             case OCP1DATATYPE_NONE:
             case OCP1DATATYPE_BOOLEAN:
             case OCP1DATATYPE_INT8:
@@ -796,7 +803,6 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
             case OCP1DATATYPE_UINT64:
             case OCP1DATATYPE_FLOAT64:
             case OCP1DATATYPE_BIT_STRING:
-            case OCP1DATATYPE_BLOB:
             case OCP1DATATYPE_BLOB_FIXED_LEN:
             case OCP1DATATYPE_CUSTOM:
             default:
