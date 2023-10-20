@@ -26,6 +26,7 @@ std::int32_t DataToInt32(const std::vector<std::uint8_t>& parameterData, bool* p
 {
     std::int32_t ret(0);
 
+    // HACK: Use >= and not == to easily deal with responses sometimes including min and max values.
     bool ok = (parameterData.size() >= sizeof(std::int32_t)); // 4 bytes expected.
     if (ok)
     {
@@ -973,7 +974,7 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
 
                 std::vector<std::uint8_t> parameterData;
                 parameterData.reserve(newValueSize);
-                for (std::uint32_t i = 0; i < newValueSize; i++)
+                for (std::uint32_t i = 0; i < newValueSize; i++) // TODO: check if this can be optimized via memcpy
                 {
                     parameterData.push_back(static_cast<std::uint8_t>(receivedData[37 + contextSize + i]));
                 }
