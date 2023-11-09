@@ -376,9 +376,9 @@ struct Ocp1CommandDefinition
      * Clone this object. To prevent slicing, this method must be overriden whenever new members or methods
      * are added to a subclass. 
      * 
-     * @return A unique_ptr of y copy of this object.
+     * @return A pointer to a copy of this object. It is the caller's responsibility to worry about the object's ownership.
      */
-    virtual std::unique_ptr<Ocp1CommandDefinition> Clone() const;
+    virtual Ocp1CommandDefinition* Clone() const;
 
 
     std::uint32_t m_targetOno;

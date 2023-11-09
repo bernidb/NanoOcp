@@ -815,9 +815,9 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
     return ret;
 }
 
-std::unique_ptr<Ocp1CommandDefinition> Ocp1CommandDefinition::Clone() const
+Ocp1CommandDefinition* Ocp1CommandDefinition::Clone() const
 {
-    return std::unique_ptr<Ocp1CommandDefinition>(new Ocp1CommandDefinition(*this));
+    return new Ocp1CommandDefinition(*this);
 }
 
 
