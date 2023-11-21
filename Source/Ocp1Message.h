@@ -407,9 +407,9 @@ public:
     Ocp1Header(std::uint8_t msgType, size_t parameterDataLength)
         :   m_syncVal(0x3b),
             m_protoVers(static_cast<std::uint16_t>(1)),
+            m_msgSize(CalculateMessageSize(msgType, parameterDataLength)),
             m_msgType(msgType),
-            m_msgCnt(static_cast<std::uint16_t>(1)),
-            m_msgSize(CalculateMessageSize(msgType, parameterDataLength))
+            m_msgCnt(static_cast<std::uint16_t>(1))
     {
     }
 
@@ -506,8 +506,9 @@ public:
      * Class constructor.
      */
     Ocp1Message(std::uint8_t msgType, const std::vector<std::uint8_t>& parameterData)
-        :   m_parameterData(parameterData),
-            m_header(Ocp1Header(msgType, parameterData.size()))
+        : m_header(Ocp1Header(msgType, parameterData.size())),
+        m_parameterData(parameterData)
+
     {
     }
 

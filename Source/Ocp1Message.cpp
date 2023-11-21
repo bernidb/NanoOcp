@@ -828,9 +828,9 @@ Ocp1CommandDefinition* Ocp1CommandDefinition::Clone() const
 Ocp1Header::Ocp1Header(const juce::MemoryBlock& memoryBlock)
     :   m_syncVal(static_cast<std::uint8_t>(0)),
         m_protoVers(static_cast<std::uint16_t>(0)),
+        m_msgSize(static_cast<std::uint32_t>(0)),
         m_msgType(static_cast<std::uint8_t>(0)),
-        m_msgCnt(static_cast<std::uint16_t>(0)),
-        m_msgSize(static_cast<std::uint32_t>(0))
+        m_msgCnt(static_cast<std::uint16_t>(0))
 {
     jassert(memoryBlock.getSize() >= 10); // Not enough data to fit even a Ocp1Header.
     if (memoryBlock.getSize() >= 10)
