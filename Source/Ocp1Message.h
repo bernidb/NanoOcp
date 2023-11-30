@@ -93,6 +93,15 @@ std::uint32_t DataToUint32(const std::vector<std::uint8_t>& parameterData, bool*
 std::vector<std::uint8_t> DataFromUint32(std::uint32_t value);
 
 /**
+ * Convenience helper method to convert a byte vector into a Uint64
+ *
+ * @param[in] parameterData     Vector of bytes containing the value to be converted.
+ * @param[in] ok                Optional parameter to verify if the conversion was successful.
+ * @return  The value contained in the parameterData as a Uint64.
+ */
+std::uint64_t DataToUint64(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
+
+/**
  * Convenience helper method to convert a byte vector into a juce::String
  *
  * @param[in] parameterData     Vector of bytes containing the string to be converted.

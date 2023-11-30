@@ -144,6 +144,26 @@ std::vector<std::uint8_t> DataFromUint32(std::uint32_t intValue)
     return ret;
 }
 
+std::uint64_t DataToUint64(const std::vector<std::uint8_t>& parameterData, bool* pOk)
+{
+    std::uint64_t ret(0);
+
+    bool ok = (parameterData.size() >= sizeof(std::uint64_t)); // 8 bytes expected.
+    if (ok)
+    {
+        std::uint64_t tmp;
+        memcpy(&tmp, parameterData.data(), sizeof(std::uint64_t));
+        ret = juce::ByteOrder::swapIfLittleEndian<std::uint64_t>(tmp);
+    }
+
+    if (pOk != nullptr)
+    {
+        *pOk = ok;
+    }
+
+    return ret;
+}
+
 juce::String DataToString(const std::vector<std::uint8_t>& parameterData, bool* pOk)
 {
     juce::String ret(0);
@@ -774,6 +794,9 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
             case OCP1DATATYPE_UINT32:
                 ret = (int)NanoOcp1::DataToUint32(parameterData, &ok);
                 break;
+            case OCP1DATATYPE_UINT64:
+                ret = (juce::int64)NanoOcp1::DataToUint64(parameterData, &ok);
+                break;
             case OCP1DATATYPE_FLOAT32:
                 ret = NanoOcp1::DataToFloat(parameterData, &ok);
                 break;
@@ -801,7 +824,6 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
             case OCP1DATATYPE_INT8:
             case OCP1DATATYPE_INT16:
             case OCP1DATATYPE_INT64:
-            case OCP1DATATYPE_UINT64:
             case OCP1DATATYPE_FLOAT64:
             case OCP1DATATYPE_BIT_STRING:
             case OCP1DATATYPE_BLOB_FIXED_LEN:
