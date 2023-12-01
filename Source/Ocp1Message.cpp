@@ -152,8 +152,8 @@ std::uint64_t DataToUint64(const std::vector<std::uint8_t>& parameterData, bool*
     if (ok)
     {
         std::uint64_t tmp;
-        memcpy(&tmp, parameterData.data(), sizeof(std::uint64_t));
-        ret = juce::ByteOrder::swapIfLittleEndian<std::uint64_t>(tmp);
+        memcpy(&tmp, parameterData.data(), sizeof(juce::uint64));
+        ret = juce::ByteOrder::swapIfLittleEndian<juce::uint64>(tmp);
     }
 
     if (pOk != nullptr)
