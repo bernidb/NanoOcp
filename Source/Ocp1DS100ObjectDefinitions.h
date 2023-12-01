@@ -563,9 +563,9 @@ struct dbOcaObjectDef_SceneAgent : Ocp1CommandDefinition
             9);                     // NextScene is MethodIdx 9
     }
 
-    std::unique_ptr<Ocp1CommandDefinition> Clone() const override
+    Ocp1CommandDefinition* Clone() const override
     {
-        return std::unique_ptr<Ocp1CommandDefinition>(new dbOcaObjectDef_SceneAgent(*this));
+        return std::unique_ptr<Ocp1CommandDefinition>(new dbOcaObjectDef_SceneAgent(*this)).release();
     }
 };
 
