@@ -36,10 +36,21 @@ static constexpr std::uint16_t MaxChannelCount = 64;
 static constexpr BoxAndObjNo Settings_Box = 0x01;
 static constexpr BoxAndObjNo Settings_DeviceName = 0x0d;
 
-static constexpr BoxAndObjNo MatrixSettings_Box = 0x02;
-static constexpr BoxAndObjNo MatrixSettings_ReverbRoomId = 0x0a;
-static constexpr BoxAndObjNo MatrixSettings_ReverbPredelayFactor = 0x04;
-static constexpr BoxAndObjNo MatrixSettings_ReverbRearLevel = 0x15;
+static constexpr BoxAndObjNo MatrixSettings_Box                     = 0x02;
+static constexpr BoxAndObjNo MatrixSettings_ReverbRoomId            = 0x0a;
+static constexpr BoxAndObjNo MatrixSettings_ReverbPredelayFactor    = 0x14;
+static constexpr BoxAndObjNo MatrixSettings_ReverbRearLevel         = 0x15;
+
+static constexpr BoxAndObjNo CoordinateMappingSettings_Box          = 0x15;
+static constexpr BoxAndObjNo CoordinateMappingSettings_Name         = 0x01;
+static constexpr BoxAndObjNo CoordinateMappingSettings_Type         = 0x02;
+static constexpr BoxAndObjNo CoordinateMappingSettings_Flip         = 0x03;
+static constexpr BoxAndObjNo CoordinateMappingSettings_P1_real      = 0x04;
+static constexpr BoxAndObjNo CoordinateMappingSettings_P2_real      = 0x05;
+static constexpr BoxAndObjNo CoordinateMappingSettings_P3_real      = 0x06;
+static constexpr BoxAndObjNo CoordinateMappingSettings_P4_real      = 0x07;
+static constexpr BoxAndObjNo CoordinateMappingSettings_P1_virtual   = 0x08;
+static constexpr BoxAndObjNo CoordinateMappingSettings_P3_virtual   = 0x09;
 
 static constexpr BoxAndObjNo CoordinateMapping_Box              = 0x16;
 static constexpr BoxAndObjNo CoordinateMapping_Source_Position  = 0x01;
@@ -58,19 +69,18 @@ static constexpr BoxAndObjNo MatrixOutput_ChannelName           = 0x07;
 static constexpr BoxAndObjNo MatrixOutput_LevelMeterPreMute     = 0x09;
 static constexpr BoxAndObjNo MatrixOutput_LevelMeterPostMute    = 0x0a;
 
-static constexpr BoxAndObjNo Positioning_Box = 0x0d;
-static constexpr BoxAndObjNo Positioning_Source_Position = 0x02;
-static constexpr BoxAndObjNo Positioning_Source_Spread = 0x04;
-static constexpr BoxAndObjNo Positioning_Source_DelayMode = 0x0b;
-static constexpr BoxAndObjNo Positioning_Speaker_Position = 0x07;
+static constexpr BoxAndObjNo Positioning_Box                = 0x0d;
+static constexpr BoxAndObjNo Positioning_Source_Position    = 0x02;
+static constexpr BoxAndObjNo Positioning_Source_Spread      = 0x04;
+static constexpr BoxAndObjNo Positioning_Source_DelayMode   = 0x0b;
+static constexpr BoxAndObjNo Positioning_Speaker_Position   = 0x07;
 
 static constexpr BoxAndObjNo Scene_Box              = 0x17;
 static constexpr BoxAndObjNo Scene_SceneIndex       = 0x01;
 static constexpr BoxAndObjNo Scene_SceneName        = 0x03;
 static constexpr BoxAndObjNo Scene_SceneComment     = 0x04;
-static constexpr BoxAndObjNo Scene_SceneNext        = 0x00; /*todo*/
-static constexpr BoxAndObjNo Scene_ScenePrevious    = 0x00; /*todo*/
-static constexpr BoxAndObjNo Scene_SceneRecall      = 0x00; /*todo*/
+
+static constexpr std::uint32_t  SceneAgentONo   = 0x2714;
 
 
 /**
@@ -88,6 +98,132 @@ struct dbOcaObjectDef_Settings_DeviceName : Ocp1CommandDefinition
 };
 
 /**
+ * CoordinateMappingSettings_Name
+ */
+struct dbOcaObjectDef_CoordinateMappingSettings_Name : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_CoordinateMappingSettings_Name(std::uint32_t record)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, record, 0x00, CoordinateMappingSettings_Box, CoordinateMappingSettings_Name), // ONO of CoordinateMappingSettings_Name
+            OCP1DATATYPE_STRING,            // Value type
+            5,                              // OcaStringActuator level - root:worker:actuator:basicactuator:stringactuator
+            1)                              // Prop_Setting
+    {
+    }
+};
+
+/**
+ * CoordinateMappingSettings_Type
+ */
+struct dbOcaObjectDef_CoordinateMappingSettings_Type : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_CoordinateMappingSettings_Type(std::uint32_t record)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, record, 0x00, CoordinateMappingSettings_Box, CoordinateMappingSettings_Type), // ONO of CoordinateMappingSettings_Type
+            OCP1DATATYPE_UINT16,    // Value type
+            4,                      // OcaSwitch level - root:worker:actuator:switch
+            1)                      // Prop_Position
+    {
+    }
+};
+
+/**
+ * CoordinateMappingSettings_Flip
+ */
+struct dbOcaObjectDef_CoordinateMappingSettings_Flip : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_CoordinateMappingSettings_Flip(std::uint32_t record)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, record, 0x00, CoordinateMappingSettings_Box, CoordinateMappingSettings_Flip), // ONO of CoordinateMappingSettings_Flip
+            OCP1DATATYPE_UINT16,    // Value type
+            4,                      // OcaSwitch level - root:worker:actuator:switch
+            1)                      // Prop_Position
+    {
+    }
+};
+
+/**
+ * CoordinateMappingSettings_P1_real
+ */
+struct dbOcaObjectDef_CoordinateMappingSettings_P1_real : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_CoordinateMappingSettings_P1_real(std::uint32_t record)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, record, 0x00, CoordinateMappingSettings_Box, CoordinateMappingSettings_P1_real), // ONO of CoordinateMappingSettings_P1_real,
+            OCP1DATATYPE_DB_POSITION,   // Value type
+            3,                          // dbOcaPositionAgentDeprecated level
+            1)                          // Prop_Position
+    {
+    }
+};
+
+/**
+ * CoordinateMappingSettings_P2_real
+ */
+struct dbOcaObjectDef_CoordinateMappingSettings_P2_real : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_CoordinateMappingSettings_P2_real(std::uint32_t record)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, record, 0x00, CoordinateMappingSettings_Box, CoordinateMappingSettings_P2_real), // ONO of CoordinateMappingSettings_P2_real,
+            OCP1DATATYPE_DB_POSITION,   // Value type
+            3,                          // dbOcaPositionAgentDeprecated level
+            1)                          // Prop_Position
+    {
+    }
+};
+
+/**
+ * CoordinateMappingSettings_P3_real
+ */
+struct dbOcaObjectDef_CoordinateMappingSettings_P3_real : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_CoordinateMappingSettings_P3_real(std::uint32_t record)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, record, 0x00, CoordinateMappingSettings_Box, CoordinateMappingSettings_P3_real), // ONO of CoordinateMappingSettings_P3_real,
+            OCP1DATATYPE_DB_POSITION,   // Value type
+            3,                          // dbOcaPositionAgentDeprecated level
+            1)                          // Prop_Position
+    {
+    }
+};
+
+/**
+ * CoordinateMappingSettings_P4_real
+ */
+struct dbOcaObjectDef_CoordinateMappingSettings_P4_real : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_CoordinateMappingSettings_P4_real(std::uint32_t record)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, record, 0x00, CoordinateMappingSettings_Box, CoordinateMappingSettings_P4_real), // ONO of CoordinateMappingSettings_P4_real,
+            OCP1DATATYPE_DB_POSITION,   // Value type
+            3,                          // dbOcaPositionAgentDeprecated level
+            1)                          // Prop_Position
+    {
+    }
+};
+
+/**
+ * CoordinateMappingSettings_P1_virtual
+ */
+struct dbOcaObjectDef_CoordinateMappingSettings_P1_virtual : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_CoordinateMappingSettings_P1_virtual(std::uint32_t record)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, record, 0x00, CoordinateMappingSettings_Box, CoordinateMappingSettings_P1_virtual), // ONO of CoordinateMappingSettings_P1_virtual,
+            OCP1DATATYPE_DB_POSITION,   // Value type
+            3,                          // dbOcaPositionAgentDeprecated level
+            1)                          // Prop_Position
+    {
+    }
+};
+
+/**
+ * CoordinateMappingSettings_P3_virtual
+ */
+struct dbOcaObjectDef_CoordinateMappingSettings_P3_virtual : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_CoordinateMappingSettings_P3_virtual(std::uint32_t record)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, record, 0x00, CoordinateMappingSettings_Box, CoordinateMappingSettings_P3_virtual), // ONO of CoordinateMappingSettings_P3_virtual,
+            OCP1DATATYPE_DB_POSITION,   // Value type
+            3,                          // dbOcaPositionAgentDeprecated level
+            1)                          // Prop_Position
+    {
+    }
+};
+
+/**
  * CoordinateMapping_Source_Position
  */
 struct dbOcaObjectDef_CoordinateMapping_Source_Position : Ocp1CommandDefinition
@@ -95,7 +231,7 @@ struct dbOcaObjectDef_CoordinateMapping_Source_Position : Ocp1CommandDefinition
     dbOcaObjectDef_CoordinateMapping_Source_Position(std::uint32_t record, std::uint32_t channel)
         : Ocp1CommandDefinition(GetONoTy2(0x02, record, channel, CoordinateMapping_Box, CoordinateMapping_Source_Position), // ONO of CoordinateMapping_Source_Position,
             OCP1DATATYPE_DB_POSITION,   // Value type
-            3,                          // CdbOcaPositionAgentDeprecated level
+            3,                          // dbOcaPositionAgentDeprecated level
             1)                          // Prop_Position
     {
     }
@@ -109,7 +245,7 @@ struct dbOcaObjectDef_Positioning_Source_Position : Ocp1CommandDefinition
     dbOcaObjectDef_Positioning_Source_Position(std::uint32_t channel)
         : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, channel, Positioning_Box, Positioning_Source_Position), // ONO of Positioning_Source_Position
             OCP1DATATYPE_DB_POSITION, // Value type
-            3,                        // CdbOcaPositionAgentDeprecated level
+            3,                        // dbOcaPositionAgentDeprecated level
             1)                        // Prop_Position
     {
     }
@@ -148,10 +284,10 @@ struct dbOcaObjectDef_Positioning_Source_DelayMode : Ocp1CommandDefinition
  */
 struct dbOcaObjectDef_Positioning_Speaker_Position : Ocp1CommandDefinition
 {
-    dbOcaObjectDef_Positioning_Speaker_Position(std::uint32_t record, std::uint32_t channel)
-        : Ocp1CommandDefinition(GetONoTy2(0x02, record, channel, Positioning_Box, Positioning_Speaker_Position), // ONO of Positioning_Speaker_Position
+    dbOcaObjectDef_Positioning_Speaker_Position(std::uint32_t channel)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, channel, Positioning_Box, Positioning_Speaker_Position), // ONO of Positioning_Speaker_Position
             OCP1DATATYPE_DB_POSITION, // Value type
-            3,                        // CdbOcaPositionAgentDeprecated level
+            4,                        // dbOcaSpeakerPositionAgentDeprecated level
             1)                        // Prop_Position
     {
     }
@@ -321,8 +457,8 @@ struct dbOcaObjectDef_MatrixSettings_ReverbPredelayFactor : Ocp1CommandDefinitio
     dbOcaObjectDef_MatrixSettings_ReverbPredelayFactor()
         : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, 0x00, MatrixSettings_Box, MatrixSettings_ReverbPredelayFactor), // ONO of MatrixSettings_ReverbPredelayFactor
             OCP1DATATYPE_FLOAT32,           // Value type
-            4,                              // OcaAudioLevelSensor level
-            1)                              // Prop_Level
+            5,                              // OcaFloat32Actuator level - root:worker:actuator:basicactuator:float32actuator
+            1)                              // Prop_Setting
     {
     }
 };
@@ -380,6 +516,56 @@ struct dbOcaObjectDef_Scene_SceneComment : Ocp1CommandDefinition
             5,                      // OcaStringActuator level - root:worker:actuator:basicactuator:stringactuator
             1)                      // Prop_Setting
     {
+    }
+};
+
+/**
+ * SceneAgent
+ */
+struct dbOcaObjectDef_SceneAgent : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_SceneAgent()
+        : Ocp1CommandDefinition(SceneAgentONo, // ONO of custom SceneAgent,
+            OCP1DATATYPE_UINT32,    // Value type
+            4,                      // SceneAgent level - root:agent:datatransfer:sceneagent
+            0)                      // Dummy
+    {
+    }
+
+    Ocp1CommandDefinition ApplyCommand(std::uint16_t major, std::uint16_t minor)
+    {
+        std::uint32_t newValue = minor + (major << 16);
+
+        std::uint8_t paramCount(1);
+        std::vector<std::uint8_t> newParamData = DataFromUint32(newValue);
+
+        return Ocp1CommandDefinition(m_targetOno,
+            OCP1DATATYPE_UINT32,
+            m_propertyDefLevel,
+            7,                     // ApplyScene is MethodIdx 7
+            paramCount,
+            newParamData);
+    }
+
+    Ocp1CommandDefinition PreviousCommand()
+    {
+        return Ocp1CommandDefinition(m_targetOno,
+            OCP1DATATYPE_NONE,
+            m_propertyDefLevel,
+            8);                     // PreviousScene is MethodIdx 8
+    }
+
+    Ocp1CommandDefinition NextCommand()
+    {
+        return Ocp1CommandDefinition(m_targetOno,
+            OCP1DATATYPE_NONE,
+            m_propertyDefLevel,
+            9);                     // NextScene is MethodIdx 9
+    }
+
+    Ocp1CommandDefinition* Clone() const override
+    {
+        return std::unique_ptr<Ocp1CommandDefinition>(new dbOcaObjectDef_SceneAgent(*this)).release();
     }
 };
 

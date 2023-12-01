@@ -22,6 +22,40 @@
 namespace NanoOcp1
 {
 
+std::int32_t DataToInt32(const std::vector<std::uint8_t>& parameterData, bool* pOk)
+{
+    std::int32_t ret(0);
+
+    // HACK: Use >= and not == to easily deal with responses sometimes including min and max values.
+    bool ok = (parameterData.size() >= sizeof(std::int32_t)); // 4 bytes expected.
+    if (ok)
+    {
+        ret = (((parameterData[0] << 24) & 0xff000000) +
+               ((parameterData[1] << 16) & 0x00ff0000) +
+               ((parameterData[2] << 8)  & 0x0000ff00) + parameterData[3]);
+    }
+
+    if (pOk != nullptr)
+    {
+        *pOk = ok;
+    }
+
+    return ret;
+}
+
+std::vector<std::uint8_t> DataFromInt32(std::int32_t intValue)
+{
+    std::vector<std::uint8_t> ret;
+    ret.reserve(4);
+
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    return ret;
+}
+
 std::uint8_t DataToUint8(const std::vector<std::uint8_t>& parameterData, bool* pOk)
 {
     std::uint8_t ret(0);
@@ -77,20 +111,55 @@ std::vector<std::uint8_t> DataFromUint16(std::uint16_t value)
     return ret;
 }
 
-std::uint32_t DataToUint32(const std::vector<std::uint8_t>& /*parameterData*/, bool* /*pOk*/)
+std::uint32_t DataToUint32(const std::vector<std::uint8_t>& parameterData, bool* pOk)
 {
     std::uint32_t ret(0);
 
-    // TODO
+    bool ok = (parameterData.size() >= sizeof(std::uint32_t)); // 4 bytes expected.
+    if (ok)
+    {
+        ret = (((parameterData[0] << 24) & 0xff000000) +
+               ((parameterData[1] << 16) & 0x00ff0000) +
+               ((parameterData[2] << 8)  & 0x0000ff00) + parameterData[3]);
+    }
+
+    if (pOk != nullptr)
+    {
+        *pOk = ok;
+    }
 
     return ret;
 }
 
-std::vector<std::uint8_t> DataFromUint32(std::uint32_t /*value*/)
+std::vector<std::uint8_t> DataFromUint32(std::uint32_t intValue)
 {
     std::vector<std::uint8_t> ret;
+    ret.reserve(4);
 
-    // TODO
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    return ret;
+}
+
+std::uint64_t DataToUint64(const std::vector<std::uint8_t>& parameterData, bool* pOk)
+{
+    std::uint64_t ret(0);
+
+    bool ok = (parameterData.size() >= sizeof(std::uint64_t)); // 8 bytes expected.
+    if (ok)
+    {
+        std::uint64_t tmp;
+        memcpy(&tmp, parameterData.data(), sizeof(std::uint64_t));
+        ret = juce::ByteOrder::swapIfLittleEndian<std::uint64_t>(tmp);
+    }
+
+    if (pOk != nullptr)
+    {
+        *pOk = ok;
+    }
 
     return ret;
 }
@@ -198,6 +267,52 @@ std::vector<std::uint8_t> DataFromPosition(std::float_t x, std::float_t y, std::
     return ret;
 }
 
+std::vector<std::uint8_t> DataFromPositionAndRotation(std::float_t x, std::float_t y, std::float_t z, std::float_t hor, std::float_t vert, std::float_t rot)
+{
+    std::vector<std::uint8_t> ret;
+    ret.reserve(6 * 4);
+
+    jassert(sizeof(std::uint32_t) == sizeof(std::float_t)); // Required for pointer cast to work
+
+    std::uint32_t intValue = *(std::uint32_t*)&x;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&y;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&z;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&hor;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&vert;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&rot;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    return ret;
+}
+
 std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono)
 {
     std::vector<std::uint8_t> ret;
@@ -238,7 +353,8 @@ std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono)
 bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z)
 {
     MemoryBlock* mb = value.getBinaryData();
-    bool ok = (mb->getSize() == 12); // Value contains 3 floats: x, y, z.
+    bool ok = (mb->getSize() == 12  // Value contains 3 floats: x, y, z.
+        || mb->getSize() == 36); // Value contains 9 floats: x, y, z and min and max each on top.
     if (ok)
     {
         std::vector<std::uint8_t> paramData;
@@ -259,6 +375,128 @@ bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y,
         for (size_t i = 8; i < 12; i++)
             paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
         z = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+
+    return ok;
+}
+
+bool VariantToPositionAndRotation(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z, std::float_t& hor, std::float_t& vert, std::float_t& rot)
+{
+    MemoryBlock* mb = value.getBinaryData();
+    bool ok = (mb->getSize() == 24); // Value contains 6 floats: x, y, z, horAngle, vertAngle, rotAngle.
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 0; i < 4; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        x = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 4; i < 8; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        y = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 8; i < 12; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        z = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 12; i < 16; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        hor = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 16; i < 20; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        vert = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        for (size_t i = 20; i < 24; i++)
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
+        rot = NanoOcp1::DataToFloat(paramData, &ok);
+    }
+
+    return ok;
+}
+
+bool VariantToBoolVector(const juce::var& value, std::vector<bool>& boolVector)
+{
+    std::uint16_t listSize(0);
+
+    jassert(value.isBinaryData());
+    MemoryBlock* mb = value.getBinaryData();
+
+    bool ok = (mb && (mb->getSize() >= 2)); // OcaList size takes up the first 2 bytes.
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        paramData.push_back(static_cast<std::uint8_t>(mb->begin()[0]));
+        paramData.push_back(static_cast<std::uint8_t>(mb->begin()[1]));
+        listSize = NanoOcp1::DataToUint16(paramData, &ok);
+    }
+
+    if (ok)
+    {
+        boolVector.clear();
+        boolVector.reserve(listSize);
+        for (int listIdx = 0; listIdx < listSize; ++listIdx)
+        {
+            boolVector.push_back(static_cast<std::uint8_t>(mb->begin()[listIdx + 2]) == static_cast <std::uint8_t>(1));
+        }
+        jassert(boolVector.size() == listSize);
+    }
+
+    return ok;
+}
+
+bool VariantToStringArray(const juce::var& value, juce::StringArray& stringArray)
+{
+    std::uint16_t listSize(0);
+    size_t readPos = 0;
+
+    jassert(value.isBinaryData());
+    MemoryBlock* mb = value.getBinaryData();
+
+    bool ok = (mb && (mb->getSize() >= 2)); // OcaList size takes up the first 2 bytes.
+    if (ok)
+    {
+        std::vector<std::uint8_t> paramData;
+        paramData.push_back(static_cast<std::uint8_t>(mb->begin()[readPos++]));
+        paramData.push_back(static_cast<std::uint8_t>(mb->begin()[readPos++]));
+        listSize = NanoOcp1::DataToUint16(paramData, &ok);
+    }
+
+    if (ok)
+    {
+        stringArray.clear();
+        stringArray.ensureStorageAllocated(listSize);
+
+        for (int listIdx = 0; listIdx < listSize; ++listIdx)
+        {
+            std::vector<std::uint8_t> paramData;
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[readPos++]));
+            paramData.push_back(static_cast<std::uint8_t>(mb->begin()[readPos++]));
+            auto stringLen = NanoOcp1::DataToUint16(paramData, &ok);
+
+            if (ok)
+            {
+                stringArray.add(juce::String(std::string(mb->begin() + readPos, stringLen)));
+                readPos += stringLen;
+            }
+        }
+
+        jassert(stringArray.size() == listSize);
     }
 
     return ok;
@@ -321,6 +559,70 @@ juce::String StatusToString(std::uint8_t status)
         default:
             result = juce::String(status);
             break;
+    }
+
+    return result;
+}
+
+juce::String DataTypeToString(int dataType)
+{
+    juce::String result;
+
+    switch (dataType)
+    {
+    case OCP1DATATYPE_BOOLEAN: 
+        result = juce::String("Boolean");
+        break;
+    case OCP1DATATYPE_INT8:
+        result = juce::String("Int8");
+        break;
+    case OCP1DATATYPE_INT16:
+        result = juce::String("Int16");
+        break;
+    case OCP1DATATYPE_INT32:
+        result = juce::String("Int32");
+        break;
+    case OCP1DATATYPE_INT64:
+        result = juce::String("Int64");
+        break;
+    case OCP1DATATYPE_UINT8:
+        result = juce::String("UInt8");
+        break;
+    case OCP1DATATYPE_UINT16:
+        result = juce::String("UInt16");
+        break;
+    case OCP1DATATYPE_UINT32:
+        result = juce::String("UInt32");
+        break;
+    case OCP1DATATYPE_UINT64:
+        result = juce::String("UInt64");
+        break;
+    case OCP1DATATYPE_FLOAT32:
+        result = juce::String("Float32");
+        break;
+    case OCP1DATATYPE_FLOAT64:
+        result = juce::String("Float64");
+        break;
+    case OCP1DATATYPE_STRING:
+        result = juce::String("String");
+        break;
+    case OCP1DATATYPE_BIT_STRING:
+        result = juce::String("BitString");
+        break;
+    case OCP1DATATYPE_BLOB:
+        result = juce::String("Blob");
+        break;
+    case OCP1DATATYPE_BLOB_FIXED_LEN:
+        result = juce::String("BlobFixedLength");
+        break;
+    case OCP1DATATYPE_DB_POSITION:
+        result = juce::String("Position (d&b)");
+        break;
+    case OCP1DATATYPE_CUSTOM:
+        result = juce::String("Custom");
+        break;
+    default:
+        break;
     }
 
     return result;
@@ -408,6 +710,10 @@ Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const juce::var& ne
 
     switch (m_propertyType) // See enum Ocp1DataType
     {
+        case OCP1DATATYPE_INT32:
+            paramCount = 1;
+            newParamData = DataFromInt32(static_cast<std::int32_t>(int(newValue)));
+            break;
         case OCP1DATATYPE_UINT8:
             paramCount = 1;
             newParamData = DataFromUint8(static_cast<std::uint8_t>(int(newValue)));
@@ -444,7 +750,6 @@ Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const juce::var& ne
         case OCP1DATATYPE_BOOLEAN:
         case OCP1DATATYPE_INT8:
         case OCP1DATATYPE_INT16:
-        case OCP1DATATYPE_INT32:
         case OCP1DATATYPE_INT64:
         case OCP1DATATYPE_UINT64:
         case OCP1DATATYPE_FLOAT64:
@@ -470,13 +775,16 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
     juce::var ret;
 
     // NOTE: Notifications usually contain 2 parameters: the context and the new value.
-    // Responses usually contain 1 or 3 parameters: current value, and sometimes also min and max.
-    bool ok = (paramCount == 1) || (paramCount == 2) || (paramCount == 3);
+    bool ok = (paramCount == 1) || (paramCount == 2) || (paramCount == 3) || (paramCount == 6);
 
     if (ok)
     {
+        ok = false;
         switch (m_propertyType) // See enum Ocp1DataType
         {
+            case OCP1DATATYPE_INT32:
+                ret = (int)NanoOcp1::DataToInt32(parameterData, &ok);
+                break;
             case OCP1DATATYPE_UINT8:
                 ret = NanoOcp1::DataToUint8(parameterData, &ok);
                 break;
@@ -486,6 +794,9 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
             case OCP1DATATYPE_UINT32:
                 ret = (int)NanoOcp1::DataToUint32(parameterData, &ok);
                 break;
+            case OCP1DATATYPE_UINT64:
+                ret = (juce::int64)NanoOcp1::DataToUint64(parameterData, &ok);
+                break;
             case OCP1DATATYPE_FLOAT32:
                 ret = NanoOcp1::DataToFloat(parameterData, &ok);
                 break;
@@ -494,22 +805,27 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
                 break;
             case OCP1DATATYPE_DB_POSITION:
                 ok = (parameterData.size() == 12) || // Notification contains 3 floats: x, y, z.
+                     (parameterData.size() == 24) || // Notification contains 6 floats: x, y, z, hor, vert, rot.
                      (parameterData.size() == 36);   // Response contains 9 floats: current, min, and max x, y, z.
                 if (ok)
                 {
-                    ret = juce::MemoryBlock((const char*)parameterData.data(), 12);
+                    ret = juce::MemoryBlock((const char*)parameterData.data(), parameterData.size());
+                }
+                break;
+            case OCP1DATATYPE_BLOB:
+                ok = (parameterData.size() >= 2); // OcaBlob size is 2 bytes
+                if (ok)
+                {
+                    ret = juce::MemoryBlock((const char*)parameterData.data(), parameterData.size());
                 }
                 break;
             case OCP1DATATYPE_NONE:
             case OCP1DATATYPE_BOOLEAN:
             case OCP1DATATYPE_INT8:
             case OCP1DATATYPE_INT16:
-            case OCP1DATATYPE_INT32:
             case OCP1DATATYPE_INT64:
-            case OCP1DATATYPE_UINT64:
             case OCP1DATATYPE_FLOAT64:
             case OCP1DATATYPE_BIT_STRING:
-            case OCP1DATATYPE_BLOB:
             case OCP1DATATYPE_BLOB_FIXED_LEN:
             case OCP1DATATYPE_CUSTOM:
             default:
@@ -521,9 +837,9 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
     return ret;
 }
 
-std::unique_ptr<Ocp1CommandDefinition> Ocp1CommandDefinition::Clone() const
+Ocp1CommandDefinition* Ocp1CommandDefinition::Clone() const
 {
-    return std::unique_ptr<Ocp1CommandDefinition>(new Ocp1CommandDefinition(*this));
+    return new Ocp1CommandDefinition(*this);
 }
 
 
@@ -534,9 +850,9 @@ std::unique_ptr<Ocp1CommandDefinition> Ocp1CommandDefinition::Clone() const
 Ocp1Header::Ocp1Header(const juce::MemoryBlock& memoryBlock)
     :   m_syncVal(static_cast<std::uint8_t>(0)),
         m_protoVers(static_cast<std::uint16_t>(0)),
+        m_msgSize(static_cast<std::uint32_t>(0)),
         m_msgType(static_cast<std::uint8_t>(0)),
-        m_msgCnt(static_cast<std::uint16_t>(0)),
-        m_msgSize(static_cast<std::uint32_t>(0))
+        m_msgCnt(static_cast<std::uint16_t>(0))
 {
     jassert(memoryBlock.getSize() >= 10); // Not enough data to fit even a Ocp1Header.
     if (memoryBlock.getSize() >= 10)
@@ -680,7 +996,7 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
 
                 std::vector<std::uint8_t> parameterData;
                 parameterData.reserve(newValueSize);
-                for (std::uint32_t i = 0; i < newValueSize; i++)
+                for (std::uint32_t i = 0; i < newValueSize; i++) // TODO: check if this can be optimized via memcpy
                 {
                     parameterData.push_back(static_cast<std::uint8_t>(receivedData[37 + contextSize + i]));
                 }

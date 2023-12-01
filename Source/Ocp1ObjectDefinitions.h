@@ -27,35 +27,13 @@ namespace NanoOcp1
 typedef std::uint32_t BoxAndObjNo;
 
 //==============================================================================
-// Dx and Dy plattform
+// Generic plattform (all amps)
 //==============================================================================
-namespace DxDy
+namespace AmpGeneric
 {
 
-static constexpr BoxAndObjNo Settings_PwrOn             = 0x100;
-static constexpr BoxAndObjNo Config_Mute                = 0x205;
-static constexpr BoxAndObjNo Config_PotiLevel           = 0x206;
-static constexpr BoxAndObjNo ChStatus_Isp               = 0x400;
-static constexpr BoxAndObjNo ChStatus_Gr                = 0x401;
-static constexpr BoxAndObjNo ChStatus_Ovl               = 0x402;
-static constexpr BoxAndObjNo ChStatus_GrHead            = 0x40a;
-static constexpr BoxAndObjNo Input_Digital_Level        = 0xe05;
-static constexpr BoxAndObjNo Input_Digital_LevelPeak    = 0xe06;
-
-/**
- * Settings_PwrOn
- * Parameters for SetValueCommand: setting 1 == ON; 0 == OFF
- */
-struct dbOcaObjectDef_Settings_PwrOn : Ocp1CommandDefinition
-{
-    dbOcaObjectDef_Settings_PwrOn() 
-        : Ocp1CommandDefinition(GetONo(0x01, 0x00, 0x00, Settings_PwrOn), // ONO of Settings_PwrOn
-                                OCP1DATATYPE_UINT8,             // Value type
-                                4,                              // OcaSwitch level
-                                1)                              // Prop_Setting
-    {
-    }
-};
+static constexpr BoxAndObjNo Config_Mute        = 0x205;
+static constexpr BoxAndObjNo Config_PotiLevel   = 0x206;
 
 /**
  * Config_PotiLevel
@@ -64,9 +42,9 @@ struct dbOcaObjectDef_Config_PotiLevel : Ocp1CommandDefinition
 {
     dbOcaObjectDef_Config_PotiLevel(std::uint32_t channel)
         : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, Config_PotiLevel), // ONO of Config_PotiLevel
-                                OCP1DATATYPE_FLOAT32,           // Value type
-                                4,                              // OcaGain level
-                                1)                              // Prop_Gain
+            OCP1DATATYPE_FLOAT32,           // Value type
+            4,                              // OcaGain level
+            1)                              // Prop_Gain
     {
     }
 };
@@ -79,9 +57,37 @@ struct dbOcaObjectDef_Config_Mute : Ocp1CommandDefinition
 {
     dbOcaObjectDef_Config_Mute(std::uint32_t channel)
         : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, Config_Mute), // ONO of Config_Mute
-                                OCP1DATATYPE_UINT8,             // Value type
-                                4,                              // OcaMute level
-                                1)                              // Prop_Setting
+            OCP1DATATYPE_UINT8,             // Value type
+            4,                              // OcaMute level
+            1)                              // Prop_Setting
+    {
+    }
+};
+};
+
+
+//==============================================================================
+// Dx and Dy amplifiers
+//==============================================================================
+namespace AmpDxDy
+{
+
+static constexpr BoxAndObjNo Settings_PwrOn     = 0x100;
+static constexpr BoxAndObjNo ChStatus_Isp       = 0x400;
+static constexpr BoxAndObjNo ChStatus_Gr        = 0x401;
+static constexpr BoxAndObjNo ChStatus_Ovl       = 0x402;
+
+/**
+ * Settings_PwrOn
+ * Parameters for SetValueCommand: setting 1 == ON; 0 == OFF
+ */
+struct dbOcaObjectDef_Settings_PwrOn : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_Settings_PwrOn() 
+        : Ocp1CommandDefinition(GetONo(0x01, 0x00, 0x00, Settings_PwrOn), // ONO of Settings_PwrOn
+            OCP1DATATYPE_UINT16,             // Value type
+            4,                              // OcaSwitch level
+            1)                              // Prop_Setting
     {
     }
 };
@@ -128,6 +134,17 @@ struct dbOcaObjectDef_ChStatus_Ovl : Ocp1CommandDefinition
     }
 };
 
+}
+
+
+//==============================================================================
+// Dx amplifier
+//==============================================================================
+namespace AmpDx // NOTE: namespaces starting with numbers cause problems
+{
+
+static constexpr BoxAndObjNo ChStatus_GrHead = 0x40c;
+
 /**
  * ChStatus_GrHead
  */
@@ -142,30 +159,27 @@ struct dbOcaObjectDef_ChStatus_GrHead : Ocp1CommandDefinition
     }
 };
 
-/**
- * Input_Digital_Level
- */
-struct dbOcaObjectDef_Input_Digital_Level : Ocp1CommandDefinition
+}
+
+
+//==============================================================================
+// Dy amplifier
+//==============================================================================
+namespace AmpDy // NOTE: namespaces starting with numbers cause problems
 {
-    dbOcaObjectDef_Input_Digital_Level(std::uint32_t record)
-        : Ocp1CommandDefinition(GetONo(0x01, record, 0x00, Input_Digital_Level), // ONO of Input_Digital_Level
-            OCP1DATATYPE_FLOAT32,           // Value type
-            4,                              // OcaAudioLevelSensor level
-            1)                              // Prop_Level ?
-    {
-    }
-};
+
+static constexpr BoxAndObjNo ChStatus_GrHead = 0x40a;
 
 /**
- * Input_Digital_LevelPeak
+ * ChStatus_GrHead
  */
-struct dbOcaObjectDef_Input_Digital_LevelPeak : Ocp1CommandDefinition
+struct dbOcaObjectDef_ChStatus_GrHead : Ocp1CommandDefinition
 {
-    dbOcaObjectDef_Input_Digital_LevelPeak(std::uint32_t record)
-        : Ocp1CommandDefinition(GetONo(0x01, record, 0x00, Input_Digital_LevelPeak), // ONO of Input_Digital_LevelPeak
+    dbOcaObjectDef_ChStatus_GrHead(std::uint32_t channel)
+        : Ocp1CommandDefinition(GetONo(0x01, 0x00, channel, ChStatus_GrHead), // ONO of ChStatus_GrHead
             OCP1DATATYPE_FLOAT32,           // Value type
             4,                              // OcaAudioLevelSensor level
-            1)                              // Prop_Level ?
+            1)                              // Prop_Reading ?
     {
     }
 };
@@ -173,19 +187,17 @@ struct dbOcaObjectDef_Input_Digital_LevelPeak : Ocp1CommandDefinition
 }
 
 
+//==============================================================================
+// 5D amplifier
+//==============================================================================
 namespace Amp5D // NOTE: namespaces starting with numbers cause problems
 {
 
 static constexpr BoxAndObjNo Settings_PwrOn     = 0x101; 
-static constexpr BoxAndObjNo ChStatus_Isp       = 0x401; //ISP 5D
-static constexpr BoxAndObjNo ChStatus_Gr        = 0x402; //GR 5D
-static constexpr BoxAndObjNo ChStatus_Ovl       = 0x403; //OVL 5D
-static constexpr BoxAndObjNo ChStatus_GrHead    = 0x404; //GrHead 5D
-
-// TODO: define 5D objects. Copy paste? Or is there a more elegant way, 
-// for example let the definitions above take in a GUID parameter and 
-// internally the correct ONO is used depending on the GUID?
-
+static constexpr BoxAndObjNo ChStatus_Isp       = 0x401;
+static constexpr BoxAndObjNo ChStatus_Gr        = 0x402;
+static constexpr BoxAndObjNo ChStatus_Ovl       = 0x403;
+static constexpr BoxAndObjNo ChStatus_GrHead    = 0x404;
 
 /**
  * Settings_PwrOn
@@ -195,7 +207,7 @@ struct dbOcaObjectDef_Settings_PwrOn : Ocp1CommandDefinition
 {
     dbOcaObjectDef_Settings_PwrOn()
         : Ocp1CommandDefinition(GetONo(0x01, 0x00, 0x00, Settings_PwrOn), // ONO of Settings_PwrOn
-            OCP1DATATYPE_UINT8,             // Value type
+            OCP1DATATYPE_UINT16,             // Value type
             4,                              // OcaSwitch level
             1)                              // Prop_Setting
     {

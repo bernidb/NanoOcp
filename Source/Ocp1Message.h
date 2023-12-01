@@ -25,6 +25,23 @@ namespace NanoOcp1
 {
 
 /**
+ * Convenience helper method to convert a byte vector into a Int32
+ *
+ * @param[in] parameterData     Vector of bytes containing the value to be converted.
+ * @param[in] ok                Optional parameter to verify if the conversion was successful.
+ * @return  The value contained in the parameterData as a Int32.
+ */
+std::int32_t DataToInt32(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
+
+/**
+ * Convenience helper method to convert a Int32 into a byte vector
+ *
+ * @param[in] value     Value to be converted.
+ * @return  The value as a byte vector.
+ */
+std::vector<std::uint8_t> DataFromInt32(std::int32_t value);
+
+/**
  * Convenience helper method to convert a byte vector into a Uint8
  * 
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
@@ -76,6 +93,15 @@ std::uint32_t DataToUint32(const std::vector<std::uint8_t>& parameterData, bool*
 std::vector<std::uint8_t> DataFromUint32(std::uint32_t value);
 
 /**
+ * Convenience helper method to convert a byte vector into a Uint64
+ *
+ * @param[in] parameterData     Vector of bytes containing the value to be converted.
+ * @param[in] ok                Optional parameter to verify if the conversion was successful.
+ * @return  The value contained in the parameterData as a Uint64.
+ */
+std::uint64_t DataToUint64(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
+
+/**
  * Convenience helper method to convert a byte vector into a juce::String
  *
  * @param[in] parameterData     Vector of bytes containing the string to be converted.
@@ -121,6 +147,19 @@ std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue);
 std::vector<std::uint8_t> DataFromPosition(std::float_t x, std::float_t y, std::float_t z);
 
 /**
+ * Convenience helper method to convert a 3D position (three 32-bit floats) into a byte vector
+ *
+ * @param[in] x     First value to be converted.
+ * @param[in] y     Second value to be converted.
+ * @param[in] z     Third value to be converted.
+ * @param[in] hor   Fourth value to be converted.
+ * @param[in] vert  Fifth value to be converted.
+ * @param[in] rot   Sixth value to be converted.
+ * @return  The values as a byte vector.
+ */
+std::vector<std::uint8_t> DataFromPositionAndRotation(std::float_t x, std::float_t y, std::float_t z, std::float_t hor, std::float_t vert, std::float_t rot);
+
+/**
  * Convenience helper method to generate a byte vector containing the parameters
  * necessary for an AddSubscription command for a given object.
  *
@@ -141,7 +180,41 @@ std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono);
 bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z);
 
 /**
- * Convenience method to convert an integer representing an OcaStatus to it's string representation.
+ * Convenience helper method to extract x, y, z, horizontal angle, vertical angle and rotation angle float values from a juce::var.
+ *
+ * @param[in] value The juce::var containing the values as 6 x 4 bytes.
+ * @param[out] x    The contained x value.
+ * @param[out] y    The contained y value.
+ * @param[out] z    The contained z value.
+ * @param[out] hor  The contained horizontal angle value.
+ * @param[out] vert The contained vertical angle value.
+ * @param[out] rot  The contained rotation angle value.
+ * @return  True if the conversion was successful.
+ */
+bool VariantToPositionAndRotation(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z, std::float_t& hor, std::float_t& vert, std::float_t& rot);
+
+/**
+ * Convenience helper method to exract a std::vector<bool> from a from a juce::var.
+ * The juce::var needs to be of type MemoryBlock, and the contents need to be marshalled as an OcaList<OcaBoolean>.
+ *
+ * @param[in] value         The juce::var containing a list of boolean values.
+ * @param[out] boolVector   The resulting std::vector<bool>. 
+ * @return  True if the conversion was successful.
+ */
+bool VariantToBoolVector(const juce::var& value, std::vector<bool>& boolVector);
+
+/**
+ * Convenience helper method to exract a juce::StringArray from a from a juce::var.
+ * The juce::var needs to be of type MemoryBlock, and the contents need to be marshalled as an OcaList<OcaString>.
+ *
+ * @param[in] value         The juce::var containing a list of strings.
+ * @param[out] stringArray  The resulting juce::StringArray.
+ * @return  True if the conversion was successful.
+ */
+bool VariantToStringArray(const juce::var& value, juce::StringArray& stringArray);
+
+/**
+ * Convenience method to convert an integer representing an OcaStatus to its string representation.
  *
  * @param[in] status     Integer representing an OcaStatus.
  * @return  The string representation of the OcaStatus.
@@ -149,7 +222,15 @@ bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y,
 juce::String StatusToString(std::uint8_t status);
 
 /**
- * Convenience method to convert an integer representing an OCA Response handle to it's string representation.
+ * Convenience method to convert an integer representing an Ocp1DataType to its string representation.
+ *
+ * @param[in] dataType  Integer representing an Ocp1DataType.
+ * @return  The string representation of the Ocp1DataType.
+ */
+juce::String DataTypeToString(int dataType);
+
+/**
+ * Convenience method to convert an integer representing an OCA Response handle to its string representation.
  * It will return juce::String(handle) most of the time, except in cases OCA_INVALID_SESSIONID and OCA_LOCAL_SESSIONID.
  *
  * @param[in] handle     OCA Response handle.
@@ -235,6 +316,11 @@ struct Ocp1CommandDefinition
      * Standard struct constructor.
      */
     Ocp1CommandDefinition()
+        :   m_targetOno(static_cast<std::uint32_t>(0)),
+            m_propertyType(static_cast<std::uint16_t>(0)),
+            m_propertyDefLevel(static_cast<std::uint16_t>(0)),
+            m_propertyIndex(static_cast<std::uint16_t>(0)),
+            m_paramCount(static_cast<std::uint8_t>(0))
     {
     }
 
@@ -304,9 +390,9 @@ struct Ocp1CommandDefinition
      * Clone this object. To prevent slicing, this method must be overriden whenever new members or methods
      * are added to a subclass. 
      * 
-     * @return A unique_ptr of y copy of this object.
+     * @return A pointer to a copy of this object. It is the caller's responsibility to worry about the object's ownership.
      */
-    virtual std::unique_ptr<Ocp1CommandDefinition> Clone() const;
+    virtual Ocp1CommandDefinition* Clone() const;
 
 
     std::uint32_t m_targetOno;
@@ -330,9 +416,9 @@ public:
     Ocp1Header(std::uint8_t msgType, size_t parameterDataLength)
         :   m_syncVal(0x3b),
             m_protoVers(static_cast<std::uint16_t>(1)),
+            m_msgSize(CalculateMessageSize(msgType, parameterDataLength)),
             m_msgType(msgType),
-            m_msgCnt(static_cast<std::uint16_t>(1)),
-            m_msgSize(CalculateMessageSize(msgType, parameterDataLength))
+            m_msgCnt(static_cast<std::uint16_t>(1))
     {
     }
 
@@ -429,8 +515,9 @@ public:
      * Class constructor.
      */
     Ocp1Message(std::uint8_t msgType, const std::vector<std::uint8_t>& parameterData)
-        :   m_parameterData(parameterData),
-            m_header(Ocp1Header(msgType, parameterData.size()))
+        : m_header(Ocp1Header(msgType, parameterData.size())),
+        m_parameterData(parameterData)
+
     {
     }
 
@@ -539,6 +626,15 @@ public:
     {
     }
 
+    /**
+     * Override the automatically assigned command handle with a manually defined one.
+     * 
+     * @param[in] handle    New command handle to use.
+     */
+    void SetHandle(std::uint32_t handle)
+    {
+        m_handle = handle;
+    }
 
     // Reimplemented from Ocp1Message
 
