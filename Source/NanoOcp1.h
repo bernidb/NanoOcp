@@ -32,7 +32,7 @@ class NanoOcp1Base
 public:
     //==============================================================================
     NanoOcp1Base(const juce::String& address, const int port);
-	virtual ~NanoOcp1Base();
+    virtual ~NanoOcp1Base();
 
     void setAddress(const juce::String& address);
     const juce::String& getAddress();
