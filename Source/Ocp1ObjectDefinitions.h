@@ -20,6 +20,7 @@
 
 
 #include "Ocp1Message.h"
+#include "Ocp1DataTypes.h"
 
 
 namespace NanoOcp1

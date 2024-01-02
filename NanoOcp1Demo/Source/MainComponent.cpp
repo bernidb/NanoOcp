@@ -19,6 +19,7 @@
 #include "MainComponent.h"
 
 #include "../../Source/NanoOcp1.h"
+#include "../../Source/Ocp1DataTypes.h"
 #include "../../Source/Ocp1ObjectDefinitions.h"
 
 
