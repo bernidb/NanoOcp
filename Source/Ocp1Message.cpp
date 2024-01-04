@@ -22,6 +22,29 @@
 namespace NanoOcp1
 {
 
+bool DataToBool(const std::vector<std::uint8_t>& parameterData, bool* pOk)
+{
+    bool ret(false);
+    bool ok = parameterData.size() == 1;
+
+    if (ok)
+    {
+        ret = (bool)(parameterData[0] == static_cast<std::uint8_t>(1));
+    }
+
+    if (pOk != nullptr)
+    {
+        *pOk = ok;
+    }
+
+    return ret;
+}
+
+std::vector<std::uint8_t> DataFromBool(bool boolValue)
+{
+    return std::vector<std::uint8_t>{ boolValue ? static_cast<std::uint8_t>(1) : static_cast<std::uint8_t>(0) };
+}
+
 std::int32_t DataToInt32(const std::vector<std::uint8_t>& parameterData, bool* pOk)
 {
     std::int32_t ret(0);
@@ -274,25 +297,7 @@ std::vector<std::uint8_t> DataFromPositionAndRotation(std::float_t x, std::float
 
     jassert(sizeof(std::uint32_t) == sizeof(std::float_t)); // Required for pointer cast to work
 
-    std::uint32_t intValue = *(std::uint32_t*)&x;
-    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
-    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
-    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
-    ret.push_back(static_cast<std::uint8_t>(intValue));
-
-    intValue = *(std::uint32_t*)&y;
-    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
-    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
-    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
-    ret.push_back(static_cast<std::uint8_t>(intValue));
-
-    intValue = *(std::uint32_t*)&z;
-    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
-    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
-    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
-    ret.push_back(static_cast<std::uint8_t>(intValue));
-
-    intValue = *(std::uint32_t*)&hor;
+    std::uint32_t intValue = *(std::uint32_t*)&hor;
     ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
     ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
     ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
@@ -305,6 +310,24 @@ std::vector<std::uint8_t> DataFromPositionAndRotation(std::float_t x, std::float
     ret.push_back(static_cast<std::uint8_t>(intValue));
 
     intValue = *(std::uint32_t*)&rot;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&x;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&y;
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
+    ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
+    ret.push_back(static_cast<std::uint8_t>(intValue));
+
+    intValue = *(std::uint32_t*)&z;
     ret.push_back(static_cast<std::uint8_t>(intValue >> 24));
     ret.push_back(static_cast<std::uint8_t>(intValue >> 16));
     ret.push_back(static_cast<std::uint8_t>(intValue >> 8));
@@ -749,7 +772,7 @@ Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const juce::var& ne
         case OCP1DATATYPE_BOOLEAN:
             {
                 paramCount = 1;
-                newParamData = { newValue.equals(bool(true)) ? static_cast<std::uint8_t>(1) : static_cast<std::uint8_t>(0)};
+                newParamData = DataFromBool(bool(newValue));
             }
             break;
         case OCP1DATATYPE_NONE:
@@ -825,8 +848,7 @@ juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::v
                 }
                 break;
             case OCP1DATATYPE_BOOLEAN:
-                ok = parameterData.size() == 1;
-                ret = (bool)(parameterData[0] == static_cast<std::uint8_t>(1));
+                ret = DataToBool(parameterData, &ok);
                 break;
             case OCP1DATATYPE_NONE:
             case OCP1DATATYPE_INT8:

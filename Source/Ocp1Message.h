@@ -25,6 +25,21 @@ namespace NanoOcp1
 {
 
 /**
+ * @brief  Convenience helper method to convert a byte vector into a bool
+ * @param  parameterData Vector of bytes containing the value to be converted.
+ * @param  pOk           Optional parameter to verify if the conversion was successful.
+ * @return               The value contained in the parameterData as bool.
+ */
+bool DataToBool(const std::vector<std::uint8_t>& parameterData, bool* pOk);
+
+/**
+ * @brief  Convenience helper method to convert a bool into a byte vector
+ * @param  boolValue Value to be converted.
+ * @return           The value as a byte vector.
+ */
+std::vector<std::uint8_t> DataFromBool(bool boolValue);
+
+/**
  * Convenience helper method to convert a byte vector into a Int32
  *
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
