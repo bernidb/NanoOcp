@@ -81,7 +81,7 @@ Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const juce::var& ne
             {
                 paramCount = 1;
                 MemoryBlock* mb = newValue.getBinaryData();
-                if (mb->getSize() == 12 || mb->getSize() == 24)
+                if (nullptr != mb && (mb->getSize() == 12 || mb->getSize() == 24))
                 {
                     newParamData.reserve(mb->getSize());
                     for (size_t i = 0; i < mb->getSize(); i++)
