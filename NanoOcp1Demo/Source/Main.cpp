@@ -37,7 +37,7 @@ public:
     //==============================================================================
     void initialise (const String& commandLine) override
     {
-		ignoreUnused(commandLine);
+        ignoreUnused(commandLine);
 
         mainWindow.reset (new MainWindow (getApplicationName()));
     }

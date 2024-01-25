@@ -19,6 +19,7 @@
 #include "MainComponent.h"
 
 #include "../../Source/NanoOcp1.h"
+#include "../../Source/Ocp1DataTypes.h"
 #include "../../Source/Ocp1ObjectDefinitions.h"
 
 
@@ -258,16 +259,16 @@ MainComponent::~MainComponent()
 
 void MainComponent::textEditorReturnKeyPressed(TextEditor& editor)
 {
-	if (&editor == m_ipAndPortEditor.get())
-	{
-		auto ip = editor.getText().upToFirstOccurrenceOf(";", false, true);
-		auto port = editor.getText().fromLastOccurrenceOf(";", false, true).getIntValue();
-		
-		m_nanoOcp1Client->stop();
-		m_nanoOcp1Client->setAddress(ip);
-		m_nanoOcp1Client->setPort(port);
-		m_nanoOcp1Client->start();
-	}
+    if (&editor == m_ipAndPortEditor.get())
+    {
+        auto ip = editor.getText().upToFirstOccurrenceOf(";", false, true);
+        auto port = editor.getText().fromLastOccurrenceOf(";", false, true).getIntValue();
+        
+        m_nanoOcp1Client->stop();
+        m_nanoOcp1Client->setAddress(ip);
+        m_nanoOcp1Client->setPort(port);
+        m_nanoOcp1Client->start();
+    }
 }
 
 void MainComponent::resized()
