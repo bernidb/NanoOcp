@@ -530,13 +530,14 @@ class Ocp1KeepAlive : public Ocp1Message
 {
 public:
     /**
-     * Class constructor.
+     * Class constructor for initialization with a 16bit seconds value.
      */
-    Ocp1KeepAlive(std::uint16_t heartBeat)
-        : Ocp1Message(static_cast<std::uint8_t>(KeepAlive), std::vector<std::uint8_t>()),
-            m_heartBeat(heartBeat)
-    {
-    }
+    Ocp1KeepAlive(std::uint16_t heartBeatSeconds);
+    
+    /**
+     * Class constructor for initialization with a 32bit milliseconds value.
+     */
+    Ocp1KeepAlive(std::uint32_t heartBeatMilliseconds);
 
     /**
      * Class destructor.
@@ -547,20 +548,20 @@ public:
 
     /**
      * Get this KeepAlive message's heartbeat time.
-     * @return This KeepAlive message's heartbeat time in seconds.
+     * @return This KeepAlive message's heartbeat time in seconds or 0 if 32bit milliseconds are used.
      */
-    std::uint16_t GetHeartBeat() const
-    {
-        return m_heartBeat;
-    }
+    std::uint16_t GetHeartBeatSeconds() const;
+    
+    /**
+     * Get this KeepAlive message's heartbeat time.
+     * @return This KeepAlive message's heartbeat time in milliseconds or 0 if 16bit seconds are used.
+     */
+    std::uint32_t GetHeartBeatMilliseconds() const;
 
 
     // Reimplemented from Ocp1Message
 
     std::vector<std::uint8_t> GetSerializedData() override;
-
-protected:
-    std::uint16_t               m_heartBeat;    // Heartbeat time in seconds, typically 5
 };
 
 }

@@ -265,7 +265,7 @@ std::uint32_t Ocp1Header::CalculateMessageSize(std::uint8_t msgType, size_t para
             ret = static_cast<std::uint32_t>(19 + parameterDataLength);
             break;
         case Ocp1Message::KeepAlive:
-            ret = static_cast<std::uint32_t>(11);
+            ret = static_cast<std::uint32_t>(9 + parameterDataLength);
             break;
         default:
             break;
@@ -524,13 +524,43 @@ std::vector<std::uint8_t> Ocp1Notification::GetSerializedData()
 // Class Ocp1KeepAlive
 //==============================================================================
 
+Ocp1KeepAlive::Ocp1KeepAlive(std::uint16_t heartBeatSeconds)
+    : Ocp1Message(static_cast<std::uint8_t>(KeepAlive), 
+                  DataFromUint16(heartBeatSeconds))
+{
+}
+
+Ocp1KeepAlive::Ocp1KeepAlive(std::uint32_t heartBeatMilliseconds)
+    : Ocp1Message(static_cast<std::uint8_t>(KeepAlive), 
+                  DataFromUint32(heartBeatMilliseconds))
+{
+}
+
+std::uint16_t Ocp1KeepAlive::GetHeartBeatSeconds() const
+{
+    if (m_parameterData.size() == sizeof(std::uint16_t))
+    {
+        return DataToUint16(m_parameterData);
+    }
+
+    return 0;
+}
+
+std::uint32_t Ocp1KeepAlive::GetHeartBeatMilliseconds() const
+{
+    if (m_parameterData.size() == sizeof(std::uint32_t))
+    {
+        return DataToUint32(m_parameterData);
+    }
+
+    return 0;
+}
+
 std::vector<std::uint8_t> Ocp1KeepAlive::GetSerializedData()
 {
     std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
-
-    serializedData.push_back(static_cast<std::uint8_t>(m_heartBeat >> 8));
-    serializedData.push_back(static_cast<std::uint8_t>(m_heartBeat));
-
+    serializedData.insert(serializedData.end(), m_parameterData.begin(), m_parameterData.end());
+    
     return serializedData;
 };
 
