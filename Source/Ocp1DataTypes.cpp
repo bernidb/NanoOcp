@@ -336,10 +336,10 @@ std::vector<std::uint8_t> DataFromPositionAndRotation(std::float_t x, std::float
     return ret;
 }
 
-std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono)
+std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono, bool add)
 {
     std::vector<std::uint8_t> ret;
-    ret.reserve(25);
+    ret.reserve(add ? 25 : 16);
 
     ret.push_back(static_cast<std::uint8_t>(ono >> 24)); // Emitter ONo
     ret.push_back(static_cast<std::uint8_t>(ono >> 16));
@@ -358,6 +358,9 @@ std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono)
     ret.push_back(static_cast<std::uint8_t>(0x03)); 
     ret.push_back(static_cast<std::uint8_t>(0x00)); // Method idx: AddSubscription
     ret.push_back(static_cast<std::uint8_t>(0x01)); 
+    
+    if (!add)
+        return ret;
 
     ret.push_back(static_cast<std::uint8_t>(0x00)); // Context size: 0
     ret.push_back(static_cast<std::uint8_t>(0x00));

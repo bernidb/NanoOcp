@@ -204,12 +204,13 @@ std::vector<std::uint8_t> DataFromPositionAndRotation(std::float_t x, std::float
 
 /**
  * Convenience helper method to generate a byte vector containing the parameters
- * necessary for an AddSubscription command for a given object.
+ * necessary for an AddSubscription or RemoveSubscription command for a given object.
  *
- * @param[in] ono     ONo of the object that the subscription shall be added for.
+ * @param[in] ono     ONo of the object that the subscription shall be added or removed for.
+ * @param[in] add     True to generate a AddSubscription command. False to generate a RemoveSubscription command.
  * @return  The parameters as a byte vector.
  */
-std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono);
+std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono, bool add = true);
 
 /**
  * Convenience helper method to extract x, y, and z float values from a juce::var.

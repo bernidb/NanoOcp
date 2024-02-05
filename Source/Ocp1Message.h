@@ -75,6 +75,14 @@ struct Ocp1CommandDefinition
     virtual Ocp1CommandDefinition AddSubscriptionCommand() const;
 
     /**
+     * Generates a Ocp1CommandDefinition for a typical Removeubscription command.
+     * Can be overriden for custom object RemoveSubscription commands.
+     *
+     * @return A RemoveSubscription command definition.
+     */
+    virtual Ocp1CommandDefinition RemoveSubscriptionCommand() const;
+
+    /**
      * Generates a Ocp1CommandDefinition for a typical GetValue command (methodIndex 1).
      * Can be overriden for custom object GetValue commands.
      * 

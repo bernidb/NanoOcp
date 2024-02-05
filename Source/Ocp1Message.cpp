@@ -26,6 +26,7 @@ namespace NanoOcp1
 //==============================================================================
 // Class Ocp1CommandDefinition
 //==============================================================================
+
 Ocp1CommandDefinition Ocp1CommandDefinition::AddSubscriptionCommand() const
 {
     return Ocp1CommandDefinition(0x00000004,                     // ONO of OcaSubscriptionManager
@@ -33,7 +34,17 @@ Ocp1CommandDefinition Ocp1CommandDefinition::AddSubscriptionCommand() const
                                  3,                              // OcaSubscriptionManager level
                                  1,                              // AddSubscription method
                                  5,                              // 5 Params 
-                                 DataFromOnoForSubscription(m_targetOno));
+                                 DataFromOnoForSubscription(m_targetOno, true));
+}
+
+Ocp1CommandDefinition Ocp1CommandDefinition::RemoveSubscriptionCommand() const
+{
+    return Ocp1CommandDefinition(0x00000004,                     // ONO of OcaSubscriptionManager
+                                 m_propertyType,
+                                 3,                              // OcaSubscriptionManager level
+                                 2,                              // RemoveSubscription method
+                                 2,                              // 2 Params 
+                                 DataFromOnoForSubscription(m_targetOno, false));
 }
 
 Ocp1CommandDefinition Ocp1CommandDefinition::GetValueCommand() const
