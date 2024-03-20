@@ -218,7 +218,7 @@ Ocp1Header::Ocp1Header(const juce::MemoryBlock& memoryBlock)
     jassert(memoryBlock.getSize() >= 10); // Not enough data to fit even a Ocp1Header.
     if (memoryBlock.getSize() >= 10)
     {
-        m_syncVal = memoryBlock[0];
+        m_syncVal = static_cast<std::uint8_t>(memoryBlock[0]);
         jassert(m_syncVal == 0x3b); // Message does not start with the sync byte.
 
         m_protoVers = ReadUint16(memoryBlock.begin() + 1);
@@ -227,7 +227,7 @@ Ocp1Header::Ocp1Header(const juce::MemoryBlock& memoryBlock)
         m_msgSize = ReadUint32(memoryBlock.begin() + 3);
         jassert(m_msgSize >= Ocp1HeaderSize); // Message has unexpected size.
 
-        m_msgType = memoryBlock[7];
+        m_msgType = static_cast<std::uint8_t>(memoryBlock[7]);
         jassert(m_msgType <= Ocp1Message::KeepAlive); // Message type outside expected range.
 
         m_msgCnt = ReadUint16(memoryBlock.begin() + 8);
@@ -257,7 +257,7 @@ std::vector<std::uint8_t> Ocp1Header::GetSerializedData() const
     serializedData.push_back(static_cast<std::uint8_t>(m_msgCnt));
 
     return serializedData;
-};
+}
 
 std::uint32_t Ocp1Header::CalculateMessageSize(std::uint8_t msgType, size_t parameterDataLength)
 {
@@ -324,7 +324,7 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
                     return nullptr;
 
                 // At least one parameter expected.
-                std::uint8_t paramCount = receivedData[22];
+                std::uint8_t paramCount = static_cast<std::uint8_t>(receivedData[22]);
                 if (paramCount < 1)
                     return nullptr;
 
@@ -377,8 +377,8 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
                 if (handle == 0)
                     return nullptr;
 
-                std::uint8_t status = receivedData[18];
-                std::uint8_t paramCount = receivedData[19];
+                std::uint8_t status = static_cast<std::uint8_t>(receivedData[18]);
+                std::uint8_t paramCount = static_cast<std::uint8_t>(receivedData[19]);
 
                 std::vector<std::uint8_t> parameterData;
                 if (parameterDataLength > 0)
@@ -445,7 +445,7 @@ std::vector<std::uint8_t> Ocp1CommandResponseRequired::GetSerializedData()
     }
 
     return serializedData;
-};
+}
 
 
 
@@ -474,7 +474,7 @@ std::vector<std::uint8_t> Ocp1Response::GetSerializedData()
     }
 
     return serializedData;
-};
+}
 
 
 
@@ -527,7 +527,7 @@ std::vector<std::uint8_t> Ocp1Notification::GetSerializedData()
     serializedData.push_back(static_cast<std::uint8_t>(1)); // Ending byte
 
     return serializedData;
-};
+}
 
 
 
@@ -573,6 +573,6 @@ std::vector<std::uint8_t> Ocp1KeepAlive::GetSerializedData()
     serializedData.insert(serializedData.end(), m_parameterData.begin(), m_parameterData.end());
     
     return serializedData;
-};
+}
 
 }

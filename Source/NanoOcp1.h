@@ -69,7 +69,7 @@ public:
     //==============================================================================
     NanoOcp1Client();
     NanoOcp1Client(const juce::String& address, const int port);
-    ~NanoOcp1Client();
+    ~NanoOcp1Client() override;
 
     //==============================================================================
     bool start() override;
@@ -98,7 +98,7 @@ public:
     //==============================================================================
     NanoOcp1Server();
     NanoOcp1Server(const juce::String& address, const int port);
-    ~NanoOcp1Server();
+    ~NanoOcp1Server() override;
 
     //==============================================================================
     bool start() override;
