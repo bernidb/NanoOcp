@@ -131,7 +131,7 @@ MainComponent::MainComponent()
     m_gainSlider->onValueChange = [=]()
     {
         std::uint32_t handle;
-        auto cmdDef(NanoOcp1::AmpGeneric::dbOcaObjectDef_Config_PotiLevel(1).SetValueCommand(static_cast<std::float_t>(m_gainSlider->getValue())));
+        auto cmdDef(NanoOcp1::AmpGeneric::dbOcaObjectDef_Config_PotiLevel(1).SetValueCommand(m_gainSlider->getValue()));
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
     };
     addAndMakeVisible(m_gainSlider.get());
@@ -139,7 +139,7 @@ MainComponent::MainComponent()
     setSize(300, 200);
 
     // create the nano ocp1 client and fire it up
-    m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>(address, port);
+    m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>(address, port, true /* synch callbacks */);
     m_nanoOcp1Client->onDataReceived = [=](const juce::MemoryBlock& message)
     {
         return OnOcp1MessageReceived(message);

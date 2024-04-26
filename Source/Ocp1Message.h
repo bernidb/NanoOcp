@@ -19,6 +19,8 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "Variant.h"
+#include "Ocp1DataTypes.h" //< USE Ocp1DataType
 
 
 namespace NanoOcp1
@@ -96,20 +98,7 @@ struct Ocp1CommandDefinition
      * 
      * @return A SetValue command definition.
      */
-    virtual Ocp1CommandDefinition SetValueCommand(const juce::var& newValue) const;
-
-    /**
-     * Convert the parameter data obtained by i.e. an OCA Notification message to the correct
-     * data type depending on this Ocp1CommandDefinition's type.
-     * The resulting value will be returned as a variant juce::var.
-     * For example, a command definition for an OcaGain object will convert the provided byte array to a float value.
-     * 
-     * @param[in] paramCount    Number of parameters inside parameterData. Usually 1.
-     * @param[in] parameterData Byte array provided by an OCA Notification or Response message.
-     * @return    The value contained in parameterData, converted to the type corresponding to 
-     *            this Ocp1CommandDefinition, and packed into a juce::var.
-     */
-    virtual juce::var ToVariant(std::uint8_t paramCount, const std::vector<std::uint8_t>& parameterData);
+    virtual Ocp1CommandDefinition SetValueCommand(const Variant& newValue) const;
 
     /**
      * Clone this object. To prevent slicing, this method must be overriden whenever new members or methods
@@ -118,6 +107,16 @@ struct Ocp1CommandDefinition
      * @return A pointer to a copy of this object. It is the caller's responsibility to worry about the object's ownership.
      */
     virtual Ocp1CommandDefinition* Clone() const;
+
+    /**
+     * Convenience getter method for the Ocp1CommandDefinition's type.
+     *
+     * @return the Ocp1CommandDefinition's type as a Ocp1DataType.
+     */
+    Ocp1DataType GetDataType() const
+    {
+        return static_cast<Ocp1DataType>(m_propertyType);
+    }
 
 
     std::uint32_t m_targetOno;
