@@ -50,8 +50,9 @@ MainComponent::MainComponent()
     m_connectedLED->setEnabled(false);
     addAndMakeVisible(m_connectedLED.get());
 
-    // Button for AddSubscription
+    // Button for AddSubscription / RemoveSubscription
     m_subscribeButton = std::make_unique<TextButton>("Subscribe");
+    m_subscribeButton->setColour(juce::TextButton::ColourIds::buttonOnColourId, juce::Colours::blue);
     m_subscribeButton->setClickingTogglesState(true);
     m_subscribeButton->onClick = [=]()
     {
@@ -80,10 +81,17 @@ MainComponent::MainComponent()
         }
         else
         {
-            // TODO
-            //std::uint32_t handle;
-            //m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(NanoOcp1::dbOcaObjectDef_Dy_RemoveSubscription_Settings_PwrOn,
-            //    handle).GetMemoryBlock());
+            // Send RemoveSubscription requests
+            std::uint32_t handle;
+            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(
+                NanoOcp1::AmpGeneric::dbOcaObjectDef_Config_PotiLevel(1).RemoveSubscriptionCommand(), handle).GetMemoryBlock());
+            m_ocaHandleMap.emplace(handle, m_potiLevelObjDef.get());
+            DBG("Sent an OCA RemoveSubscription command with handle " << NanoOcp1::HandleToString(handle));
+
+            m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(
+                NanoOcp1::AmpDxDy::dbOcaObjectDef_Settings_PwrOn().RemoveSubscriptionCommand(), handle).GetMemoryBlock());
+            m_ocaHandleMap.emplace(handle, m_pwrOnObjDef.get());
+            DBG("Sent an OCA RemoveSubscription command with handle " << NanoOcp1::HandleToString(handle));
         }
     };
     addAndMakeVisible(m_subscribeButton.get());
@@ -123,7 +131,7 @@ MainComponent::MainComponent()
     m_gainSlider->onValueChange = [=]()
     {
         std::uint32_t handle;
-        auto cmdDef(NanoOcp1::AmpGeneric::dbOcaObjectDef_Config_PotiLevel(1).SetValueCommand(static_cast<std::float_t>(m_gainSlider->getValue())));
+        auto cmdDef(NanoOcp1::AmpGeneric::dbOcaObjectDef_Config_PotiLevel(1).SetValueCommand(m_gainSlider->getValue()));
         m_nanoOcp1Client->sendData(NanoOcp1::Ocp1CommandResponseRequired(cmdDef, handle).GetMemoryBlock());
     };
     addAndMakeVisible(m_gainSlider.get());
@@ -131,7 +139,7 @@ MainComponent::MainComponent()
     setSize(300, 200);
 
     // create the nano ocp1 client and fire it up
-    m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>(address, port);
+    m_nanoOcp1Client = std::make_unique<NanoOcp1::NanoOcp1Client>(address, port, true /* synch callbacks */);
     m_nanoOcp1Client->onDataReceived = [=](const juce::MemoryBlock& message)
     {
         return OnOcp1MessageReceived(message);

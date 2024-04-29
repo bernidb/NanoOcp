@@ -67,9 +67,9 @@ class NanoOcp1Client : public NanoOcp1Base, public Ocp1Connection, public juce::
 {
 public:
     //==============================================================================
-    NanoOcp1Client();
-    NanoOcp1Client(const juce::String& address, const int port);
-    ~NanoOcp1Client();
+    NanoOcp1Client(const bool callbacksOnMessageThread);
+    NanoOcp1Client(const juce::String& address, const int port, const bool callbacksOnMessageThread);
+    ~NanoOcp1Client() override;
 
     //==============================================================================
     bool start() override;
@@ -96,9 +96,9 @@ class NanoOcp1Server : public NanoOcp1Base, public Ocp1ConnectionServer
 {
 public:
     //==============================================================================
-    NanoOcp1Server();
-    NanoOcp1Server(const juce::String& address, const int port);
-    ~NanoOcp1Server();
+    NanoOcp1Server(const bool callbacksOnMessageThread);
+    NanoOcp1Server(const juce::String& address, const int port, const bool callbacksOnMessageThread);
+    ~NanoOcp1Server() override;
 
     //==============================================================================
     bool start() override;
@@ -113,8 +113,8 @@ protected:
 
 private:
     //==============================================================================
-
     std::unique_ptr<NanoOcp1Client> m_activeConnection;
+    bool m_callbacksOnMessageThread{ true };
 };
 
 }

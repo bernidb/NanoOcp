@@ -58,7 +58,7 @@ enum Ocp1DataType
  * @param  pOk           Optional parameter to verify if the conversion was successful.
  * @return               The value contained in the parameterData as bool.
  */
-bool DataToBool(const std::vector<std::uint8_t>& parameterData, bool* pOk);
+bool DataToBool(const std::vector<std::uint8_t>& parameterData, bool* pOk = nullptr);
 
 /**
  * @brief  Convenience helper method to convert a bool into a byte vector
@@ -71,10 +71,10 @@ std::vector<std::uint8_t> DataFromBool(bool boolValue);
  * Convenience helper method to convert a byte vector into a Int32
  *
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
- * @param[in] ok                Optional parameter to verify if the conversion was successful.
+ * @param[in] pOk               Optional parameter to verify if the conversion was successful.
  * @return  The value contained in the parameterData as a Int32.
  */
-std::int32_t DataToInt32(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
+std::int32_t DataToInt32(const std::vector<std::uint8_t>& parameterData, bool* pOk = nullptr);
 
 /**
  * Convenience helper method to convert a Int32 into a byte vector
@@ -88,10 +88,10 @@ std::vector<std::uint8_t> DataFromInt32(std::int32_t value);
  * Convenience helper method to convert a byte vector into a Uint8
  * 
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
- * @param[in] ok                Optional parameter to verify if the conversion was successful.
+ * @param[in] pOk               Optional parameter to verify if the conversion was successful.
  * @return  The value contained in the parameterData as a Uint8.
  */
-std::uint8_t DataToUint8(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
+std::uint8_t DataToUint8(const std::vector<std::uint8_t>& parameterData, bool* pOk = nullptr);
 
 /**
  * Convenience helper method to convert a Uint8 into a byte vector
@@ -105,10 +105,10 @@ std::vector<std::uint8_t> DataFromUint8(std::uint8_t value);
  * Convenience helper method to convert a byte vector into a Uint16
  *
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
- * @param[in] ok                Optional parameter to verify if the conversion was successful.
+ * @param[in] pOk               Optional parameter to verify if the conversion was successful.
  * @return  The value contained in the parameterData as a Uint16.
  */
-std::uint16_t DataToUint16(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
+std::uint16_t DataToUint16(const std::vector<std::uint8_t>& parameterData, bool* pOk = nullptr);
 
 /**
  * Convenience helper method to convert a Uint16 into a byte vector
@@ -122,10 +122,10 @@ std::vector<std::uint8_t> DataFromUint16(std::uint16_t value);
  * Convenience helper method to convert a byte vector into a Uint32
  *
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
- * @param[in] ok                Optional parameter to verify if the conversion was successful.
+ * @param[in] pOk               Optional parameter to verify if the conversion was successful.
  * @return  The value contained in the parameterData as a Uint32.
  */
-std::uint32_t DataToUint32(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
+std::uint32_t DataToUint32(const std::vector<std::uint8_t>& parameterData, bool* pOk = nullptr);
 
 /**
  * Convenience helper method to convert a Uint32 into a byte vector
@@ -139,20 +139,28 @@ std::vector<std::uint8_t> DataFromUint32(std::uint32_t value);
  * Convenience helper method to convert a byte vector into a Uint64
  *
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
- * @param[in] ok                Optional parameter to verify if the conversion was successful.
+ * @param[in] pOk               Optional parameter to verify if the conversion was successful.
  * @return  The value contained in the parameterData as a Uint64.
  */
-std::uint64_t DataToUint64(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
+std::uint64_t DataToUint64(const std::vector<std::uint8_t>& parameterData, bool* pOk = nullptr);
+
+/**
+ * Convenience helper method to convert a Uint64 into a byte vector
+ *
+ * @param[in] value     Value to be converted.
+ * @return  The value as a byte vector.
+ */
+std::vector<std::uint8_t> DataFromUint64(std::uint64_t value);
 
 /**
  * Convenience helper method to convert a byte vector into a juce::String
  *
  * @param[in] parameterData     Vector of bytes containing the string to be converted.
  *                              Note that the first two bytes contain the string's length.
- * @param[in] ok                Optional parameter to verify if the conversion was successful.
+ * @param[in] pOk               Optional parameter to verify if the conversion was successful.
  * @return  The string contained in the parameterData as a juce::String.
  */
-juce::String DataToString(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
+juce::String DataToString(const std::vector<std::uint8_t>& parameterData, bool* pOk = nullptr);
 
 /**
  * Convenience helper method to convert a juce::String into a byte vector
@@ -166,10 +174,10 @@ std::vector<std::uint8_t> DataFromString(const juce::String& string);
  * Convenience helper method to convert a byte vector into a 32-bit float.
  *
  * @param[in] parameterData     Vector of bytes containing the value to be converted.
- * @param[in] ok                Optional parameter to verify if the conversion was successful.
+ * @param[in] pOk               Optional parameter to verify if the conversion was successful.
  * @return  The value contained in the parameterData as a float.
  */
-std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* ok = nullptr);
+std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* pOk = nullptr);
 
 /**
  * Convenience helper method to convert a 32-bit float into a byte vector
@@ -178,6 +186,23 @@ std::float_t DataToFloat(const std::vector<std::uint8_t>& parameterData, bool* o
  * @return  The value as a byte vector.
  */
 std::vector<std::uint8_t> DataFromFloat(std::float_t floatValue);
+
+/**
+ * Convenience helper method to convert a byte vector into a 64-bit double.
+ *
+ * @param[in] parameterData     Vector of bytes containing the value to be converted.
+ * @param[in] pOk               Optional parameter to verify if the conversion was successful.
+ * @return  The value contained in the parameterData as a double.
+ */
+std::double_t DataToDouble(const std::vector<std::uint8_t>& parameterData, bool* pOk = nullptr);
+
+/**
+ * Convenience helper method to convert a 64-bit double into a byte vector
+ *
+ * @param[in] doubleValue    Value to be converted.
+ * @return  The value as a byte vector.
+ */
+std::vector<std::uint8_t> DataFromDouble(std::double_t doubleValue);
 
 /**
  * Convenience helper method to convert a 3D position (three 32-bit floats) into a byte vector
@@ -204,57 +229,13 @@ std::vector<std::uint8_t> DataFromPositionAndRotation(std::float_t x, std::float
 
 /**
  * Convenience helper method to generate a byte vector containing the parameters
- * necessary for an AddSubscription command for a given object.
+ * necessary for an AddSubscription or RemoveSubscription command for a given object.
  *
- * @param[in] ono     ONo of the object that the subscription shall be added for.
+ * @param[in] ono     ONo of the object that the subscription shall be added or removed for.
+ * @param[in] add     True to generate a AddSubscription command. False to generate a RemoveSubscription command.
  * @return  The parameters as a byte vector.
  */
-std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono);
-
-/**
- * Convenience helper method to extract x, y, and z float values from a juce::var.
- *
- * @param[in] value The juce::var containing the values as 3 x 4 bytes.
- * @param[out] x    The contained x value.
- * @param[out] y    The contained y value.
- * @param[out] z    The contained z value.
- * @return  True if the conversion was successful. 
- */
-bool VariantToPosition(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z);
-
-/**
- * Convenience helper method to extract x, y, z, horizontal angle, vertical angle and rotation angle float values from a juce::var.
- *
- * @param[in] value The juce::var containing the values as 6 x 4 bytes.
- * @param[out] x    The contained x value.
- * @param[out] y    The contained y value.
- * @param[out] z    The contained z value.
- * @param[out] hor  The contained horizontal angle value.
- * @param[out] vert The contained vertical angle value.
- * @param[out] rot  The contained rotation angle value.
- * @return  True if the conversion was successful.
- */
-bool VariantToPositionAndRotation(const juce::var& value, std::float_t& x, std::float_t& y, std::float_t& z, std::float_t& hor, std::float_t& vert, std::float_t& rot);
-
-/**
- * Convenience helper method to exract a std::vector<bool> from a from a juce::var.
- * The juce::var needs to be of type MemoryBlock, and the contents need to be marshalled as an OcaList<OcaBoolean>.
- *
- * @param[in] value         The juce::var containing a list of boolean values.
- * @param[out] boolVector   The resulting std::vector<bool>. 
- * @return  True if the conversion was successful.
- */
-bool VariantToBoolVector(const juce::var& value, std::vector<bool>& boolVector);
-
-/**
- * Convenience helper method to exract a juce::StringArray from a from a juce::var.
- * The juce::var needs to be of type MemoryBlock, and the contents need to be marshalled as an OcaList<OcaString>.
- *
- * @param[in] value         The juce::var containing a list of strings.
- * @param[out] stringArray  The resulting juce::StringArray.
- * @return  True if the conversion was successful.
- */
-bool VariantToStringArray(const juce::var& value, juce::StringArray& stringArray);
+std::vector<std::uint8_t> DataFromOnoForSubscription(std::uint32_t ono, bool add = true);
 
 /**
  * Convenience method to convert an integer representing an OcaStatus to its string representation.

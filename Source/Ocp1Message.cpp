@@ -17,7 +17,6 @@
  */
  
 #include "Ocp1Message.h"
-#include "Ocp1DataTypes.h"
 
 
 namespace NanoOcp1
@@ -26,6 +25,7 @@ namespace NanoOcp1
 //==============================================================================
 // Class Ocp1CommandDefinition
 //==============================================================================
+
 Ocp1CommandDefinition Ocp1CommandDefinition::AddSubscriptionCommand() const
 {
     return Ocp1CommandDefinition(0x00000004,                     // ONO of OcaSubscriptionManager
@@ -33,7 +33,17 @@ Ocp1CommandDefinition Ocp1CommandDefinition::AddSubscriptionCommand() const
                                  3,                              // OcaSubscriptionManager level
                                  1,                              // AddSubscription method
                                  5,                              // 5 Params 
-                                 DataFromOnoForSubscription(m_targetOno));
+                                 DataFromOnoForSubscription(m_targetOno, true));
+}
+
+Ocp1CommandDefinition Ocp1CommandDefinition::RemoveSubscriptionCommand() const
+{
+    return Ocp1CommandDefinition(0x00000004,                     // ONO of OcaSubscriptionManager
+                                 m_propertyType,
+                                 3,                              // OcaSubscriptionManager level
+                                 2,                              // RemoveSubscription method
+                                 2,                              // 2 Params 
+                                 DataFromOnoForSubscription(m_targetOno, false));
 }
 
 Ocp1CommandDefinition Ocp1CommandDefinition::GetValueCommand() const
@@ -46,145 +56,16 @@ Ocp1CommandDefinition Ocp1CommandDefinition::GetValueCommand() const
                                  std::vector<std::uint8_t>());   // Empty parameters
 }
 
-Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const juce::var& newValue) const
+Ocp1CommandDefinition Ocp1CommandDefinition::SetValueCommand(const Variant& newValue) const
 {
-    std::uint8_t paramCount(0);
-    std::vector<std::uint8_t> newParamData;
-
-    switch (m_propertyType) // See enum Ocp1DataType
-    {
-        case OCP1DATATYPE_INT32:
-            paramCount = 1;
-            newParamData = DataFromInt32(static_cast<std::int32_t>(int(newValue)));
-            break;
-        case OCP1DATATYPE_UINT8:
-            paramCount = 1;
-            newParamData = DataFromUint8(static_cast<std::uint8_t>(int(newValue)));
-            break;
-        case OCP1DATATYPE_UINT16:
-            paramCount = 1;
-            newParamData = DataFromUint16(static_cast<std::uint16_t>(int(newValue)));
-            break;
-        case OCP1DATATYPE_UINT32:
-            paramCount = 1;
-            newParamData = DataFromUint32(static_cast<std::uint32_t>(int(newValue)));
-            break;
-        case OCP1DATATYPE_FLOAT32:
-            paramCount = 1;
-            newParamData = DataFromFloat(float(newValue));
-            break;
-        case OCP1DATATYPE_STRING:
-            paramCount = 1;
-            newParamData = DataFromString(newValue.toString());
-            break;
-        case OCP1DATATYPE_DB_POSITION:
-            {
-                paramCount = 1;
-                MemoryBlock* mb = newValue.getBinaryData();
-                if (nullptr != mb && (mb->getSize() == 12 || mb->getSize() == 24))
-                {
-                    newParamData.reserve(mb->getSize());
-                    for (size_t i = 0; i < mb->getSize(); i++)
-                        newParamData.push_back(static_cast<std::uint8_t>(mb->begin()[i]));
-                }
-            }
-            break;
-        case OCP1DATATYPE_BOOLEAN:
-            {
-                paramCount = 1;
-                newParamData = DataFromBool(bool(newValue));
-            }
-            break;
-        case OCP1DATATYPE_NONE:
-        case OCP1DATATYPE_INT8:
-        case OCP1DATATYPE_INT16:
-        case OCP1DATATYPE_INT64:
-        case OCP1DATATYPE_UINT64:
-        case OCP1DATATYPE_FLOAT64:
-        case OCP1DATATYPE_BIT_STRING:
-        case OCP1DATATYPE_BLOB:
-        case OCP1DATATYPE_BLOB_FIXED_LEN:
-        case OCP1DATATYPE_CUSTOM:
-        default:
-            jassert(false); // Type conversion not implemented yet.
-            break;
-    }
+    std::vector<std::uint8_t> newParamData = newValue.ToParamData(GetDataType());
 
     return Ocp1CommandDefinition(m_targetOno,
                                  m_propertyType,
                                  m_propertyDefLevel,
                                  2,                     // Set method is usually MethodIdx 2
-                                 paramCount,
+                                 1,                     // Set method usually takes one parameter
                                  newParamData);
-}
-
-juce::var Ocp1CommandDefinition::ToVariant(std::uint8_t paramCount, const std::vector<std::uint8_t>& parameterData)
-{
-    juce::var ret;
-
-    // NOTE: Notifications usually contain 2 parameters: the context and the new value.
-    bool ok = (paramCount == 1) || (paramCount == 2) || (paramCount == 3) || (paramCount == 6);
-
-    if (ok)
-    {
-        ok = false;
-        switch (m_propertyType) // See enum Ocp1DataType
-        {
-            case OCP1DATATYPE_INT32:
-                ret = (int)NanoOcp1::DataToInt32(parameterData, &ok);
-                break;
-            case OCP1DATATYPE_UINT8:
-                ret = NanoOcp1::DataToUint8(parameterData, &ok);
-                break;
-            case OCP1DATATYPE_UINT16:
-                ret = NanoOcp1::DataToUint16(parameterData, &ok);
-                break;
-            case OCP1DATATYPE_UINT32:
-                ret = (int)NanoOcp1::DataToUint32(parameterData, &ok);
-                break;
-            case OCP1DATATYPE_UINT64:
-                ret = (juce::int64)NanoOcp1::DataToUint64(parameterData, &ok);
-                break;
-            case OCP1DATATYPE_FLOAT32:
-                ret = NanoOcp1::DataToFloat(parameterData, &ok);
-                break;
-            case OCP1DATATYPE_STRING:
-                ret = DataToString(parameterData, &ok);
-                break;
-            case OCP1DATATYPE_DB_POSITION:
-                ok = (parameterData.size() == 12) || // Notification contains 3 floats: x, y, z.
-                     (parameterData.size() == 24) || // Notification contains 6 floats: x, y, z, hor, vert, rot.
-                     (parameterData.size() == 36);   // Response contains 9 floats: current, min, and max x, y, z.
-                if (ok)
-                {
-                    ret = juce::MemoryBlock((const char*)parameterData.data(), parameterData.size());
-                }
-                break;
-            case OCP1DATATYPE_BLOB:
-                ok = (parameterData.size() >= 2); // OcaBlob size is 2 bytes
-                if (ok)
-                {
-                    ret = juce::MemoryBlock((const char*)parameterData.data(), parameterData.size());
-                }
-                break;
-            case OCP1DATATYPE_BOOLEAN:
-                ret = DataToBool(parameterData, &ok);
-                break;
-            case OCP1DATATYPE_NONE:
-            case OCP1DATATYPE_INT8:
-            case OCP1DATATYPE_INT16:
-            case OCP1DATATYPE_INT64:
-            case OCP1DATATYPE_FLOAT64:
-            case OCP1DATATYPE_BIT_STRING:
-            case OCP1DATATYPE_BLOB_FIXED_LEN:
-            case OCP1DATATYPE_CUSTOM:
-            default:
-                break;
-        }
-    }
-
-    jassert(ok); // Type conversion failed or not implemented.
-    return ret;
 }
 
 Ocp1CommandDefinition* Ocp1CommandDefinition::Clone() const
@@ -207,7 +88,7 @@ Ocp1Header::Ocp1Header(const juce::MemoryBlock& memoryBlock)
     jassert(memoryBlock.getSize() >= 10); // Not enough data to fit even a Ocp1Header.
     if (memoryBlock.getSize() >= 10)
     {
-        m_syncVal = memoryBlock[0];
+        m_syncVal = static_cast<std::uint8_t>(memoryBlock[0]);
         jassert(m_syncVal == 0x3b); // Message does not start with the sync byte.
 
         m_protoVers = ReadUint16(memoryBlock.begin() + 1);
@@ -216,7 +97,7 @@ Ocp1Header::Ocp1Header(const juce::MemoryBlock& memoryBlock)
         m_msgSize = ReadUint32(memoryBlock.begin() + 3);
         jassert(m_msgSize >= Ocp1HeaderSize); // Message has unexpected size.
 
-        m_msgType = memoryBlock[7];
+        m_msgType = static_cast<std::uint8_t>(memoryBlock[7]);
         jassert(m_msgType <= Ocp1Message::KeepAlive); // Message type outside expected range.
 
         m_msgCnt = ReadUint16(memoryBlock.begin() + 8);
@@ -246,7 +127,7 @@ std::vector<std::uint8_t> Ocp1Header::GetSerializedData() const
     serializedData.push_back(static_cast<std::uint8_t>(m_msgCnt));
 
     return serializedData;
-};
+}
 
 std::uint32_t Ocp1Header::CalculateMessageSize(std::uint8_t msgType, size_t parameterDataLength)
 {
@@ -265,7 +146,7 @@ std::uint32_t Ocp1Header::CalculateMessageSize(std::uint8_t msgType, size_t para
             ret = static_cast<std::uint32_t>(19 + parameterDataLength);
             break;
         case Ocp1Message::KeepAlive:
-            ret = static_cast<std::uint32_t>(11);
+            ret = static_cast<std::uint32_t>(9 + parameterDataLength);
             break;
         default:
             break;
@@ -313,7 +194,7 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
                     return nullptr;
 
                 // At least one parameter expected.
-                std::uint8_t paramCount = receivedData[22];
+                std::uint8_t paramCount = static_cast<std::uint8_t>(receivedData[22]);
                 if (paramCount < 1)
                     return nullptr;
 
@@ -366,8 +247,8 @@ std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::Memor
                 if (handle == 0)
                     return nullptr;
 
-                std::uint8_t status = receivedData[18];
-                std::uint8_t paramCount = receivedData[19];
+                std::uint8_t status = static_cast<std::uint8_t>(receivedData[18]);
+                std::uint8_t paramCount = static_cast<std::uint8_t>(receivedData[19]);
 
                 std::vector<std::uint8_t> parameterData;
                 if (parameterDataLength > 0)
@@ -434,7 +315,7 @@ std::vector<std::uint8_t> Ocp1CommandResponseRequired::GetSerializedData()
     }
 
     return serializedData;
-};
+}
 
 
 
@@ -463,7 +344,7 @@ std::vector<std::uint8_t> Ocp1Response::GetSerializedData()
     }
 
     return serializedData;
-};
+}
 
 
 
@@ -516,7 +397,7 @@ std::vector<std::uint8_t> Ocp1Notification::GetSerializedData()
     serializedData.push_back(static_cast<std::uint8_t>(1)); // Ending byte
 
     return serializedData;
-};
+}
 
 
 
@@ -524,14 +405,44 @@ std::vector<std::uint8_t> Ocp1Notification::GetSerializedData()
 // Class Ocp1KeepAlive
 //==============================================================================
 
+Ocp1KeepAlive::Ocp1KeepAlive(std::uint16_t heartBeatSeconds)
+    : Ocp1Message(static_cast<std::uint8_t>(KeepAlive), 
+                  DataFromUint16(heartBeatSeconds))
+{
+}
+
+Ocp1KeepAlive::Ocp1KeepAlive(std::uint32_t heartBeatMilliseconds)
+    : Ocp1Message(static_cast<std::uint8_t>(KeepAlive), 
+                  DataFromUint32(heartBeatMilliseconds))
+{
+}
+
+std::uint16_t Ocp1KeepAlive::GetHeartBeatSeconds() const
+{
+    if (m_parameterData.size() == sizeof(std::uint16_t))
+    {
+        return DataToUint16(m_parameterData);
+    }
+
+    return 0;
+}
+
+std::uint32_t Ocp1KeepAlive::GetHeartBeatMilliseconds() const
+{
+    if (m_parameterData.size() == sizeof(std::uint32_t))
+    {
+        return DataToUint32(m_parameterData);
+    }
+
+    return 0;
+}
+
 std::vector<std::uint8_t> Ocp1KeepAlive::GetSerializedData()
 {
     std::vector<std::uint8_t> serializedData = m_header.GetSerializedData();
-
-    serializedData.push_back(static_cast<std::uint8_t>(m_heartBeat >> 8));
-    serializedData.push_back(static_cast<std::uint8_t>(m_heartBeat));
-
+    serializedData.insert(serializedData.end(), m_parameterData.begin(), m_parameterData.end());
+    
     return serializedData;
-};
+}
 
 }

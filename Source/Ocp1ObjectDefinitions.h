@@ -94,7 +94,7 @@ struct dbOcaObjectDef_Config_Mute : Ocp1CommandDefinition
     {
     }
 };
-};
+}
 
 
 //==============================================================================

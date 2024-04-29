@@ -19,6 +19,8 @@
 #pragma once
 
 #include <JuceHeader.h>
+#include "Variant.h"
+#include "Ocp1DataTypes.h" //< USE Ocp1DataType
 
 
 namespace NanoOcp1
@@ -75,6 +77,14 @@ struct Ocp1CommandDefinition
     virtual Ocp1CommandDefinition AddSubscriptionCommand() const;
 
     /**
+     * Generates a Ocp1CommandDefinition for a typical Removeubscription command.
+     * Can be overriden for custom object RemoveSubscription commands.
+     *
+     * @return A RemoveSubscription command definition.
+     */
+    virtual Ocp1CommandDefinition RemoveSubscriptionCommand() const;
+
+    /**
      * Generates a Ocp1CommandDefinition for a typical GetValue command (methodIndex 1).
      * Can be overriden for custom object GetValue commands.
      * 
@@ -88,20 +98,7 @@ struct Ocp1CommandDefinition
      * 
      * @return A SetValue command definition.
      */
-    virtual Ocp1CommandDefinition SetValueCommand(const juce::var& newValue) const;
-
-    /**
-     * Convert the parameter data obtained by i.e. an OCA Notification message to the correct
-     * data type depending on this Ocp1CommandDefinition's type.
-     * The resulting value will be returned as a variant juce::var.
-     * For example, a command definition for an OcaGain object will convert the provided byte array to a float value.
-     * 
-     * @param[in] paramCount    Number of parameters inside parameterData. Usually 1.
-     * @param[in] parameterData Byte array provided by an OCA Notification or Response message.
-     * @return    The value contained in parameterData, converted to the type corresponding to 
-     *            this Ocp1CommandDefinition, and packed into a juce::var.
-     */
-    virtual juce::var ToVariant(std::uint8_t paramCount, const std::vector<std::uint8_t>& parameterData);
+    virtual Ocp1CommandDefinition SetValueCommand(const Variant& newValue) const;
 
     /**
      * Clone this object. To prevent slicing, this method must be overriden whenever new members or methods
@@ -110,6 +107,16 @@ struct Ocp1CommandDefinition
      * @return A pointer to a copy of this object. It is the caller's responsibility to worry about the object's ownership.
      */
     virtual Ocp1CommandDefinition* Clone() const;
+
+    /**
+     * Convenience getter method for the Ocp1CommandDefinition's type.
+     *
+     * @return the Ocp1CommandDefinition's type as a Ocp1DataType.
+     */
+    Ocp1DataType GetDataType() const
+    {
+        return static_cast<Ocp1DataType>(m_propertyType);
+    }
 
 
     std::uint32_t m_targetOno;
@@ -530,13 +537,14 @@ class Ocp1KeepAlive : public Ocp1Message
 {
 public:
     /**
-     * Class constructor.
+     * Class constructor for initialization with a 16bit seconds value.
      */
-    Ocp1KeepAlive(std::uint16_t heartBeat)
-        : Ocp1Message(static_cast<std::uint8_t>(KeepAlive), std::vector<std::uint8_t>()),
-            m_heartBeat(heartBeat)
-    {
-    }
+    Ocp1KeepAlive(std::uint16_t heartBeatSeconds);
+    
+    /**
+     * Class constructor for initialization with a 32bit milliseconds value.
+     */
+    Ocp1KeepAlive(std::uint32_t heartBeatMilliseconds);
 
     /**
      * Class destructor.
@@ -547,20 +555,20 @@ public:
 
     /**
      * Get this KeepAlive message's heartbeat time.
-     * @return This KeepAlive message's heartbeat time in seconds.
+     * @return This KeepAlive message's heartbeat time in seconds or 0 if 32bit milliseconds are used.
      */
-    std::uint16_t GetHeartBeat() const
-    {
-        return m_heartBeat;
-    }
+    std::uint16_t GetHeartBeatSeconds() const;
+    
+    /**
+     * Get this KeepAlive message's heartbeat time.
+     * @return This KeepAlive message's heartbeat time in milliseconds or 0 if 16bit seconds are used.
+     */
+    std::uint32_t GetHeartBeatMilliseconds() const;
 
 
     // Reimplemented from Ocp1Message
 
     std::vector<std::uint8_t> GetSerializedData() override;
-
-protected:
-    std::uint16_t               m_heartBeat;    // Heartbeat time in seconds, typically 5
 };
 
 }
