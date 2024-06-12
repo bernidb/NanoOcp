@@ -113,14 +113,15 @@ bool Ocp1Connection::connectToSocket(const String& hostName,
 
 void Ocp1Connection::disconnect(int timeoutMs, Notify notify)
 {
-    thread->signalThreadShouldExit();
-
+    //should be called before socket->close to ensure that running processes on the thread
+    //are notified that the thread is about to exit.
+    thread->stopThread(timeoutMs);
+    
     {
         const ScopedReadLock sl(socketLock);
         if (socket != nullptr)  socket->close();
     }
-
-    thread->stopThread(timeoutMs);
+    
     deleteSocket();
 
     if (notify == Notify::yes)
