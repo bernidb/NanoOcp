@@ -97,7 +97,7 @@ Ocp1Connection::~Ocp1Connection()
 bool Ocp1Connection::connectToSocket(const String& hostName,
     int portNumber, int timeOutMillisecs)
 {
-    disconnect();
+    disconnect(1000);
 
     auto s = std::make_unique<StreamingSocket>();
 
