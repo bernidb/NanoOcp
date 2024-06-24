@@ -96,7 +96,7 @@ bool NanoOcp1Client::stop()
 
     stopTimer();
 
-    disconnect();
+    disconnect(1000);
 
     if (onConnectionLost && !isConnected())
         onConnectionLost();
@@ -165,7 +165,7 @@ bool NanoOcp1Server::stop()
 {
     if (m_activeConnection)
     {
-        m_activeConnection->disconnect();
+        m_activeConnection->disconnect(1000);
         return !m_activeConnection->isConnected();
     }
     else
