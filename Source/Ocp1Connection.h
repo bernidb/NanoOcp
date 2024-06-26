@@ -45,7 +45,7 @@ public:
     virtual ~Ocp1Connection();
 
     bool connectToSocket(const juce::String& hostName, int portNumber, int timeOutMillisecs);
-    void disconnect(int timeoutMs = -1, Notify notify = Notify::yes);
+    void disconnect(int timeoutMs = 0, Notify notify = Notify::yes);
     bool isConnected() const;
     juce::StreamingSocket* getSocket() const noexcept { return socket.get(); }
     juce::String getConnectedHostName() const;
