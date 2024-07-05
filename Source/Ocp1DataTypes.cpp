@@ -16,7 +16,12 @@
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
 
-#include <JuceHeader.h>
+#ifdef JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED
+    #include <juce_core/juce_core.h>
+#else
+    #include <JuceHeader.h>
+#endif
+
 
 #include "Ocp1DataTypes.h"
 
