@@ -24,9 +24,9 @@ namespace NanoOcp1
 {
 
 
-struct Ocp1Connection::ConnectionThread : public Thread
+struct Ocp1Connection::ConnectionThread : public juce::Thread
 {
-    ConnectionThread(Ocp1Connection& c) : Thread("JUCE IPC"), owner(c) {}
+    ConnectionThread(Ocp1Connection& c) : juce::Thread("JUCE IPC"), owner(c) {}
     void run() override { owner.runThread(); }
 
     Ocp1Connection& owner;
@@ -42,7 +42,7 @@ public:
     template <typename Fn>
     void ifSafe(Fn&& fn)
     {
-        const ScopedLock lock(mutex);
+        const juce::ScopedLock lock(mutex);
 
         if (safe)
             fn(ref);
@@ -50,18 +50,18 @@ public:
 
     void setSafe(bool s)
     {
-        const ScopedLock lock(mutex);
+        const juce::ScopedLock lock(mutex);
         safe = s;
     }
 
     bool isSafe()
     {
-        const ScopedLock lock(mutex);
+        const juce::ScopedLock lock(mutex);
         return safe;
     }
 
 private:
-    CriticalSection mutex;
+    juce::CriticalSection mutex;
     Ocp1Connection& ref;
     bool safe = false;
 };
@@ -94,16 +94,16 @@ Ocp1Connection::~Ocp1Connection()
 }
 
 //==============================================================================
-bool Ocp1Connection::connectToSocket(const String& hostName,
+bool Ocp1Connection::connectToSocket(const juce::String& hostName,
     int portNumber, int timeOutMillisecs)
 {
     disconnect(1000);
 
-    auto s = std::make_unique<StreamingSocket>();
+    auto s = std::make_unique<juce::StreamingSocket>();
 
     if (s->connect(hostName, portNumber, timeOutMillisecs))
     {
-        const ScopedWriteLock sl(socketLock);
+        const juce::ScopedWriteLock sl(socketLock);
         initialiseWithSocket(std::move(s));
         return true;
     }
@@ -118,7 +118,7 @@ void Ocp1Connection::disconnect(int timeoutMs, Notify notify)
     thread->stopThread(timeoutMs);
     
     {
-        const ScopedReadLock sl(socketLock);
+        const juce::ScopedReadLock sl(socketLock);
         if (socket != nullptr)  socket->close();
     }
     
@@ -133,22 +133,22 @@ void Ocp1Connection::disconnect(int timeoutMs, Notify notify)
 
 void Ocp1Connection::deleteSocket()
 {
-    const ScopedWriteLock sl(socketLock);
+    const juce::ScopedWriteLock sl(socketLock);
     socket.reset();
 }
 
 bool Ocp1Connection::isConnected() const
 {
-    const ScopedReadLock sl(socketLock);
+    const juce::ScopedReadLock sl(socketLock);
 
     return (socket != nullptr && socket->isConnected())
         && threadIsRunning;
 }
 
-String Ocp1Connection::getConnectedHostName() const
+juce::String Ocp1Connection::getConnectedHostName() const
 {
     {
-        const ScopedReadLock sl(socketLock);
+        const juce::ScopedReadLock sl(socketLock);
 
         if (socket == nullptr)
             return {};
@@ -157,7 +157,7 @@ String Ocp1Connection::getConnectedHostName() const
             return socket->getHostName();
     }
 
-    return IPAddress::local().toString();
+    return juce::IPAddress::local().toString();
 }
 
 //==============================================================================
@@ -171,7 +171,7 @@ bool Ocp1Connection::sendMessage(const juce::MemoryBlock& message)
 
 int Ocp1Connection::writeData(void* data, int dataSize)
 {
-    const ScopedReadLock sl(socketLock);
+    const juce::ScopedReadLock sl(socketLock);
 
     if (socket != nullptr)
         return socket->write(data, dataSize);
@@ -188,7 +188,7 @@ void Ocp1Connection::initialise()
     thread->startThread();
 }
 
-void Ocp1Connection::initialiseWithSocket(std::unique_ptr<StreamingSocket> newSocket)
+void Ocp1Connection::initialiseWithSocket(std::unique_ptr<juce::StreamingSocket> newSocket)
 {
     jassert(socket == nullptr);
     socket = std::move(newSocket);
@@ -196,7 +196,7 @@ void Ocp1Connection::initialiseWithSocket(std::unique_ptr<StreamingSocket> newSo
 }
 
 //==============================================================================
-struct ConnectionStateMessage : public MessageManager::MessageBase
+struct ConnectionStateMessage : public juce::MessageManager::MessageBase
 {
     ConnectionStateMessage(std::shared_ptr<SafeActionImpl> ipc, bool connected) noexcept
         : safeAction(ipc), connectionMade(connected)
@@ -245,7 +245,7 @@ void Ocp1Connection::connectionLostInt()
     }
 }
 
-struct DataDeliveryMessage : public Message
+struct DataDeliveryMessage : public juce::Message
 {
     DataDeliveryMessage(std::shared_ptr<SafeActionImpl> ipc, const juce::MemoryBlock& d)
         : safeAction(ipc), data(d)
@@ -276,7 +276,7 @@ void Ocp1Connection::deliverDataInt(const juce::MemoryBlock& data)
 //==============================================================================
 int Ocp1Connection::readData(void* data, int num)
 {
-    const ScopedReadLock sl(socketLock);
+    const juce::ScopedReadLock sl(socketLock);
 
     if (socket != nullptr)
         return socket->read(data, num, true);
@@ -307,8 +307,8 @@ bool Ocp1Connection::readNextMessage()
             if (thread->threadShouldExit())
                 return false;
 
-            auto numThisTime = jmin(bytesLeft, 65536);
-            auto bytesIn = readData(addBytesToPointer(messageData.getData(), readPosition), numThisTime);
+            auto numThisTime = juce::jmin(bytesLeft, 65536);
+            auto bytesIn = readData(juce::addBytesToPointer(messageData.getData(), readPosition), numThisTime);
 
             if (bytesIn <= 0)
                 break;
