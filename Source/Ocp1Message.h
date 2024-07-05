@@ -18,7 +18,13 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#ifdef JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED
+    #include <juce_core/juce_core.h>
+    #include <juce_events/juce_events.h>
+#else
+    #include <JuceHeader.h>
+#endif
+
 #include "Variant.h"
 #include "Ocp1DataTypes.h" //< USE Ocp1DataType
 
