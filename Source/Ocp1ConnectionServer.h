@@ -34,14 +34,14 @@ class Ocp1Connection;
 
     @see NanoOcp1::Ocp1Connection
 */
-class Ocp1ConnectionServer : private Thread
+class Ocp1ConnectionServer : private juce::Thread
 {
 public:
     //==============================================================================
     Ocp1ConnectionServer();
     ~Ocp1ConnectionServer() override;
 
-    bool beginWaitingForSocket(int portNumber, const String& bindAddress = String());
+    bool beginWaitingForSocket(int portNumber, const juce::String& bindAddress = juce::String());
     void stop();
     int getBoundPort() const noexcept;
 
@@ -51,7 +51,7 @@ protected:
 
 private:
     //==============================================================================
-    std::unique_ptr<StreamingSocket> socket;
+    std::unique_ptr<juce::StreamingSocket> socket;
 
     void run() override;
 
