@@ -15,8 +15,15 @@
  * along with this library; if not, write to the Free Software Foundation, Inc.,
  * 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
- 
+
 #include "Ocp1Message.h"
+
+#ifdef JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED
+    #include <juce_core/juce_core.h>
+    #include <juce_events/juce_events.h>
+#else
+    #include <JuceHeader.h>
+#endif
 
 
 namespace NanoOcp1
@@ -162,6 +169,12 @@ std::uint32_t Ocp1Header::CalculateMessageSize(std::uint8_t msgType, size_t para
 
 // OCA_INVALID_SESSIONID  == 0, OCA_LOCAL_SESSIONID == 1
 std::uint32_t Ocp1Message::m_nextHandle = 2;
+
+juce::MemoryBlock Ocp1Message::GetMemoryBlock()
+{
+    auto serializedData = GetSerializedData();
+    return juce::MemoryBlock((const char*)serializedData.data(), serializedData.size());
+}
 
 std::unique_ptr<Ocp1Message> Ocp1Message::UnmarshalOcp1Message(const juce::MemoryBlock& receivedData)
 {

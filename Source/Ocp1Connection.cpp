@@ -19,6 +19,13 @@
 #include "Ocp1Connection.h"
 #include "Ocp1Message.h"
 
+#ifdef JUCE_GLOBAL_MODULE_SETTINGS_INCLUDED
+    #include <juce_core/juce_core.h>
+    #include <juce_events/juce_events.h>
+#else
+    #include <JuceHeader.h>
+#endif
+
 
 namespace NanoOcp1
 {
