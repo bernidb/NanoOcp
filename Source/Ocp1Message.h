@@ -18,9 +18,17 @@
 
 #pragma once
 
-#include <JuceHeader.h>
+#include <memory>
+
 #include "Variant.h"
 #include "Ocp1DataTypes.h" //< USE Ocp1DataType
+
+
+// Forward declaration
+namespace juce
+{
+    class MemoryBlock;
+}
 
 
 namespace NanoOcp1
@@ -286,11 +294,7 @@ public:
      *
      * @return  A juce::MemoryBlock containing the OCA message including header.
      */
-    juce::MemoryBlock GetMemoryBlock()
-    {
-        auto serializedData = GetSerializedData();
-        return juce::MemoryBlock((const char*)serializedData.data(), serializedData.size());
-    }
+    juce::MemoryBlock GetMemoryBlock();
 
     /**
      * Factory method which creates a new Ocp1Message object based on a MemoryBlock.
