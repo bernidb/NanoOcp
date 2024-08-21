@@ -774,6 +774,64 @@ struct dbOcaObjectDef_MatrixSettings_ReverbRoomId : Ocp1CommandDefinition
 };
 
 /**
+ * MatrixSettings_ReverbRoomID - specialization to access the switche's position names
+ */
+struct dbOcaObjDef_MatrixSettings_ReverbRoomIdNames : Ocp1CommandDefinition
+{
+    dbOcaObjDef_MatrixSettings_ReverbRoomIdNames()
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, 0x00, MatrixSettings_Box, MatrixSettings_ReverbRoomId), // ONO of MatrixSettings_ReverbRoomId
+            OCP1DATATYPE_BLOB,      // Actual datatype is OcaList<OcaString>
+            DefLevel_OcaSwitch,
+            2)                      // Prop_Position_Names
+    {
+    }
+
+    Ocp1CommandDefinition GetValueCommand() const override
+    {
+        return Ocp1CommandDefinition(m_targetOno,
+            m_propertyType,
+            m_propertyDefLevel,
+            5,                                 // GetPositionNames has MethodIdx 5
+            0,                                 // GetPositionNames needs 0 input params
+            std::vector<std::uint8_t>());      // Empty parameters
+    }
+
+    dbOcaObjDef_MatrixSettings_ReverbRoomIdNames* Clone() const override
+    {
+        return new dbOcaObjDef_MatrixSettings_ReverbRoomIdNames(*this);
+    }
+};
+
+/**
+ * MatrixSettings_ReverbRoomID - specialization to access the switche's position enabled values
+ */
+struct dbOcaObjDef_MatrixSettings_ReverbRoomIdEnableds : Ocp1CommandDefinition
+{
+    dbOcaObjDef_MatrixSettings_ReverbRoomIdEnableds()
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, 0x00, MatrixSettings_Box, MatrixSettings_ReverbRoomId), // ONO of MatrixSettings_ReverbRoomId
+            OCP1DATATYPE_BLOB,      // Actual datatype is OcaList<OcaBoolean>
+            DefLevel_OcaSwitch,
+            3)                      // Prop_Position_Enabled
+    {
+    }
+
+    Ocp1CommandDefinition GetValueCommand() const override
+    {
+        return Ocp1CommandDefinition(m_targetOno,
+            m_propertyType,
+            m_propertyDefLevel,
+            9,                                 // GetPositionEnableds has MethodIdx 9
+            0,                                 // GetPositionEnableds needs 0 input params
+            std::vector<std::uint8_t>());      // Empty parameters
+    }
+
+    dbOcaObjDef_MatrixSettings_ReverbRoomIdEnableds* Clone() const override
+    {
+        return new dbOcaObjDef_MatrixSettings_ReverbRoomIdEnableds(*this);
+    }
+};
+
+/**
  * MatrixSettings_ReverbPredelayFactor
  */
 struct dbOcaObjectDef_MatrixSettings_ReverbPredelayFactor : Ocp1CommandDefinition
