@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
-<JUCERPROJECT id="t0S85N" name="NanoOcpDemo" projectType="guiapp" version="0.4.1"
+<JUCERPROJECT id="t0S85N" name="NanoOcpDemo" projectType="guiapp" version="0.4.2"
               companyName="Christian Ahrens" companyEmail="christianahrens@me.com"
               companyCopyright="2022" jucerFormatVersion="1" defines="" headerPath="../../../Source">
   <MAINGROUP id="wsXNhp" name="NanoOcpDemo">
