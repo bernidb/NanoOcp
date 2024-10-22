@@ -40,6 +40,7 @@ static constexpr int DefLevel_OcaGain               = 1 + DefLevel_OcaActuator;
 static constexpr int DefLevel_OcaMute               = 1 + DefLevel_OcaActuator;
 static constexpr int DefLevel_OcaDelay              = 1 + DefLevel_OcaActuator;
 static constexpr int DefLevel_OcaBasicActuator      = 1 + DefLevel_OcaActuator;
+static constexpr int DefLevel_OcaInt32Actuator      = 1 + DefLevel_OcaBasicActuator;
 static constexpr int DefLevel_OcaFloat32Actuator    = 1 + DefLevel_OcaBasicActuator;
 static constexpr int DefLevel_OcaStringActuator     = 1 + DefLevel_OcaBasicActuator;
 static constexpr int DefLevel_OcaSensor             = 1 + DefLevel_OcaWorker;

@@ -2,7 +2,7 @@
 
 <JUCERPROJECT id="t0S85N" name="NanoOcpDemo" projectType="guiapp" version="0.4.1"
               companyName="Christian Ahrens" companyEmail="christianahrens@me.com"
-              companyCopyright="2022" jucerFormatVersion="1" defines="">
+              companyCopyright="2022" jucerFormatVersion="1" defines="" headerPath="../../../Source">
   <MAINGROUP id="wsXNhp" name="NanoOcpDemo">
     <GROUP id="{45B42ABC-4AC3-D8D9-5073-D1AEE8199147}" name="Sources">
       <GROUP id="{DE5292AD-A04C-8CBE-3F3C-5E74276E0314}" name="NanoOcp1">
@@ -19,6 +19,8 @@
         <FILE id="B6L3IH" name="Ocp1DataTypes.cpp" compile="1" resource="0"
               file="../Source/Ocp1DataTypes.cpp"/>
         <FILE id="Na077F" name="Ocp1DataTypes.h" compile="0" resource="0" file="../Source/Ocp1DataTypes.h"/>
+        <FILE id="SFXDXH" name="Ocp1DS100ObjectDefinitions.h" compile="0" resource="0"
+              file="../Source/Ocp1DS100ObjectDefinitions.h"/>
         <FILE id="ZzmlzS" name="Ocp1Message.cpp" compile="1" resource="0" file="../Source/Ocp1Message.cpp"/>
         <FILE id="XEXSpv" name="Ocp1Message.h" compile="0" resource="0" file="../Source/Ocp1Message.h"/>
         <FILE id="OkE08K" name="Ocp1ObjectDefinitions.h" compile="0" resource="0"
