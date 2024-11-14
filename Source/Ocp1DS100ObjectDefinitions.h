@@ -73,8 +73,10 @@ static constexpr BoxAndObjNo MatrixInput_DelayEnable        = 0x04;
 static constexpr BoxAndObjNo MatrixInput_EqEnable           = 0x05;
 static constexpr BoxAndObjNo MatrixInput_Polarity           = 0x06;
 static constexpr BoxAndObjNo MatrixInput_ChannelName        = 0x07;
+static constexpr BoxAndObjNo MatrixInput_LevelMeterIn       = 0x08;
 static constexpr BoxAndObjNo MatrixInput_LevelMeterPreMute  = 0x09;
 static constexpr BoxAndObjNo MatrixInput_LevelMeterPostMute = 0x0a;
+static constexpr BoxAndObjNo MatrixInput_ISP                = 0x0b;
 static constexpr BoxAndObjNo MatrixInput_ReverbSendGain     = 0x0d;
 
 static constexpr BoxAndObjNo MatrixNode_Box                 = 0x07;
@@ -91,8 +93,10 @@ static constexpr BoxAndObjNo MatrixOutput_DelayEnable           = 0x04;
 static constexpr BoxAndObjNo MatrixOutput_EqEnable              = 0x05;
 static constexpr BoxAndObjNo MatrixOutput_Polarity              = 0x06;
 static constexpr BoxAndObjNo MatrixOutput_ChannelName           = 0x07;
+static constexpr BoxAndObjNo MatrixOutput_LevelMeterIn          = 0x08;
 static constexpr BoxAndObjNo MatrixOutput_LevelMeterPreMute     = 0x09;
 static constexpr BoxAndObjNo MatrixOutput_LevelMeterPostMute    = 0x0a;
+static constexpr BoxAndObjNo MatrixOutput_OSP                   = 0x0b;
 
 static constexpr BoxAndObjNo Positioning_Box                = 0x0d;
 static constexpr BoxAndObjNo Positioning_Source_Position    = 0x02;
@@ -565,6 +569,20 @@ struct dbOcaObjectDef_MatrixInput_ChannelName : Ocp1CommandDefinition
 };
 
 /**
+ * MatrixInput_LevelMeterIn
+ */
+struct dbOcaObjectDef_MatrixInput_LevelMeterIn : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_MatrixInput_LevelMeterIn(std::uint32_t channel)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, channel, MatrixInput_Box, MatrixInput_LevelMeterIn), // ONO of MatrixInput_LevelMeterIn
+            OCP1DATATYPE_FLOAT32,           // Value type
+            DefLevel_OcaLevelSensor,
+            1)                              // Prop_Level
+    {
+    }
+};
+
+/**
  * MatrixInput_LevelMeterPreMute
  */
 struct dbOcaObjectDef_MatrixInput_LevelMeterPreMute : Ocp1CommandDefinition
@@ -588,6 +606,20 @@ struct dbOcaObjectDef_MatrixInput_LevelMeterPostMute : Ocp1CommandDefinition
             OCP1DATATYPE_FLOAT32,           // Value type
             DefLevel_OcaLevelSensor,
             1)                              // Prop_Level
+    {
+    }
+};
+
+/**
+ * MatrixInput_ISP
+ */
+struct dbOcaObjectDef_MatrixInput_ISP : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_MatrixInput_ISP(std::uint32_t channel)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, channel, MatrixInput_Box, MatrixInput_ISP), // ONO of MatrixInput_ISP,
+            OCP1DATATYPE_BOOLEAN,   // Value type
+            DefLevel_OcaBooleanSensor,
+            1)                      // Prop_Reading
     {
     }
 };
@@ -762,6 +794,20 @@ struct dbOcaObjectDef_MatrixOutput_ChannelName : Ocp1CommandDefinition
 };
 
 /**
+ * MatrixOutput_LevelMeterIn
+ */
+struct dbOcaObjectDef_MatrixOutput_LevelMeterIn : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_MatrixOutput_LevelMeterIn(std::uint32_t channel)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, channel, MatrixOutput_Box, MatrixOutput_LevelMeterIn), // ONO of MatrixOutput_LevelMeterIn
+            OCP1DATATYPE_FLOAT32,           // Value type
+            DefLevel_OcaLevelSensor,
+            1)                              // Prop_Level
+    {
+    }
+};
+
+/**
  * MatrixOutput_LevelMeterPreMute
  */
 struct dbOcaObjectDef_MatrixOutput_LevelMeterPreMute : Ocp1CommandDefinition
@@ -785,6 +831,20 @@ struct dbOcaObjectDef_MatrixOutput_LevelMeterPostMute : Ocp1CommandDefinition
             OCP1DATATYPE_FLOAT32,           // Value type
             DefLevel_OcaLevelSensor,
             1)                              // Prop_Level
+    {
+    }
+};
+
+/**
+ * MatrixOutput_OSP
+ */
+struct dbOcaObjectDef_MatrixOutput_OSP : Ocp1CommandDefinition
+{
+    dbOcaObjectDef_MatrixOutput_OSP(std::uint32_t channel)
+        : Ocp1CommandDefinition(GetONoTy2(0x02, 0x00, channel, MatrixOutput_Box, MatrixOutput_OSP), // ONO of MatrixOutput_OSP,
+            OCP1DATATYPE_BOOLEAN,   // Value type
+            DefLevel_OcaBooleanSensor,
+            1)                      // Prop_Reading
     {
     }
 };
